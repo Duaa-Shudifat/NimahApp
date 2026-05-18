@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "200655571194",
+    "project_id": "nimah-app-74450",
+    "storage_bucket": "nimah-app-74450.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200655571194:android:166dbc34969ed0af726143",
+        "android_client_info": {
+          "package_name": "com.example.nimah_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZltZQk_1vtpg4gnlwQ_sNVzzK2ztS1Ts"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:200655571194:android:baf9e6a1ed4054b9726143",
+        "android_client_info": {
+          "package_name": "com.example.nimah_app_new"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBZltZQk_1vtpg4gnlwQ_sNVzzK2ztS1Ts"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
