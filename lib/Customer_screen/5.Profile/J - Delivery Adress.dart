@@ -215,7 +215,7 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
                             }
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey.shade200,
+                            backgroundColor: Colors.deepOrange,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(15),
@@ -224,7 +224,7 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
                           child: const Text(
                             "Add New Address",
                             style: TextStyle(
-                              color: Colors.brown,
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

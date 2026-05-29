@@ -100,7 +100,6 @@ class _UsersPageState extends State<UsersPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // NAME + STATUS
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -142,12 +141,10 @@ class _UsersPageState extends State<UsersPage> {
 
           const SizedBox(height: 10),
 
-          // 🔥 ACTION BUTTONS
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
 
-              // BLOCK / UNBLOCK
               ElevatedButton(
                 onPressed: () {
                   setState(() {
@@ -165,7 +162,6 @@ class _UsersPageState extends State<UsersPage> {
 
               const SizedBox(width: 10),
 
-              // DELETE
               ElevatedButton(
                 onPressed: () {
                   setState(() {

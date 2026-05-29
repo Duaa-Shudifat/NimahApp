@@ -96,9 +96,10 @@ class _ProviderVerificationScreenState
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Account Verification",
-            style:
-            TextStyle(color: Colors.brown, fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Account Verification",
+          style: TextStyle(color: Colors.brown, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Container(
@@ -126,8 +127,10 @@ class _ProviderVerificationScreenState
                 snapshot.data!.data() as Map<String, dynamic>? ?? {};
             final status = data['VerificationStatus'] ?? 'new';
             final bool isBlocked = data['blocked'] ?? false;
+            final bool hasSeenAccepted =
+                data['hasSeenAcceptedScreen'] ?? false;
 
-            // BLOCKED
+            // ─── BLOCKED ───────────────────────────────────────────────
             if (isBlocked) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -158,9 +161,10 @@ class _ProviderVerificationScreenState
                         );
                       },
                       icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text("Logout",
-                          style:
-                          TextStyle(color: Colors.red, fontSize: 16)),
+                      label: const Text(
+                        "Logout",
+                        style: TextStyle(color: Colors.red, fontSize: 16),
+                      ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.red),
                         shape: RoundedRectangleBorder(
@@ -172,48 +176,145 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // PENDING / ACCEPTED / REJECTED
-            if (status == 'pending' ||
-                status == 'accepted' ||
-                status == 'rejected') {
+            // ─── ACCEPTED — first time: show congratulations screen ────
+            if (status == 'accepted' && !hasSeenAccepted) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    status == 'accepted'
-                        ? Icons.check_circle
-                        : status == 'rejected'
-                        ? Icons.cancel
-                        : Icons.hourglass_top,
-                    size: 80,
-                    color: status == 'accepted'
-                        ? Colors.green
-                        : status == 'rejected'
-                        ? Colors.red
-                        : Colors.orange,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    status == 'pending'
-                        ? "Under Review... Please wait."
-                        : status == 'accepted'
-                        ? "Accepted! 🎉 Press Continue."
-                        : "Rejected ❌ Please contact support.",
+                  const Icon(Icons.celebration,
+                      size: 90, color: Colors.green),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "🎉 Congratulations!",
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      color: status == 'accepted'
-                          ? Colors.green
-                          : status == 'rejected'
-                          ? Colors.red
-                          : Colors.orange,
+                      color: Colors.green,
                     ),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Your account has been accepted.\nYou can now start receiving orders!",
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        // Mark as seen so this screen never shows again
+                        await FirebaseFirestore.instance
+                            .collection('FOOD_PROVIDERS')
+                            .doc(uid)
+                            .update({'hasSeenAcceptedScreen': true});
 
-                  // سبب الرفض
-                  if (status == 'rejected' &&
-                      data['rejectionReason'] != null &&
+                        if (!context.mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const ProviderHomeScreen()),
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_forward,
+                          color: Colors.white),
+                      label: const Text(
+                        "Continue",
+                        style:
+                        TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // ─── ACCEPTED — already seen: go directly to home ──────────
+            if (status == 'accepted' && hasSeenAccepted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => const ProviderHomeScreen()),
+                );
+              });
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.green),
+              );
+            }
+
+            // ─── PENDING ───────────────────────────────────────────────
+            if (status == 'pending') {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.hourglass_top,
+                      size: 80, color: Colors.orange),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Under Review... Please wait.",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.orange,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const LaunchWelcomeScreen()),
+                              (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_back,
+                          color: Colors.orange),
+                      label: const Text(
+                        "Back to Home",
+                        style:
+                        TextStyle(color: Colors.orange, fontSize: 16),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.orange),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // ─── REJECTED ──────────────────────────────────────────────
+            if (status == 'rejected') {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.cancel, size: 80, color: Colors.red),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Rejected ❌ Please contact support.",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (data['rejectionReason'] != null &&
                       data['rejectionReason'].toString().isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -233,10 +334,7 @@ class _ProviderVerificationScreenState
                         ),
                       ),
                     ),
-
                   const SizedBox(height: 40),
-
-                  // Back to Home
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -251,9 +349,11 @@ class _ProviderVerificationScreenState
                       },
                       icon: const Icon(Icons.arrow_back,
                           color: Colors.orange),
-                      label: const Text("Back to Home",
-                          style: TextStyle(
-                              color: Colors.orange, fontSize: 16)),
+                      label: const Text(
+                        "Back to Home",
+                        style:
+                        TextStyle(color: Colors.orange, fontSize: 16),
+                      ),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Colors.orange),
                         shape: RoundedRectangleBorder(
@@ -261,74 +361,48 @@ class _ProviderVerificationScreenState
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 15),
-
-                  // Continue - accepted فقط
-                  if (status == 'accepted')
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) =>
-                                const ProviderHomeScreen()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                        ),
-                        child: const Text("Continue",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 18)),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await FirebaseFirestore.instance
+                            .collection('FOOD_PROVIDERS')
+                            .doc(uid)
+                            .update({
+                          'VerificationStatus': 'new',
+                          'rejectionReason': null,
+                        });
+                      },
+                      icon:
+                      const Icon(Icons.refresh, color: Colors.white),
+                      label: const Text(
+                        "Reapply",
+                        style:
+                        TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
                       ),
                     ),
-
-                  // Reapply - rejected فقط
-                  if (status == 'rejected')
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          await FirebaseFirestore.instance
-                              .collection('FOOD_PROVIDERS')
-                              .doc(uid)
-                              .update({
-                            'VerificationStatus': 'new',
-                            'rejectionReason': null,
-                          });
-                        },
-                        icon: const Icon(Icons.refresh,
-                            color: Colors.white),
-                        label: const Text("Reapply",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 16)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                        ),
-                      ),
-                    ),
+                  ),
                 ],
               );
             }
 
-            // FORM - new أو أي status ثاني
+            // ─── FORM (new or any other status) ────────────────────────
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
-                  const Text("Please fill in your restaurant details",
-                      style:
-                      TextStyle(fontSize: 16, color: Colors.brown)),
+                  const Text(
+                    "Please fill in your restaurant details",
+                    style: TextStyle(fontSize: 16, color: Colors.brown),
+                  ),
                   const SizedBox(height: 20),
 
                   _field("Restaurant Name", _locationNameController,
@@ -338,10 +412,11 @@ class _ProviderVerificationScreenState
                   _field("Food Safety License Number",
                       _foodLicenseController, Icons.food_bank),
 
-                  const Text("Restaurant Location",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown)),
+                  const Text(
+                    "Restaurant Location",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.brown),
+                  ),
                   const SizedBox(height: 8),
                   Container(
                     height: 250,
@@ -404,10 +479,11 @@ class _ProviderVerificationScreenState
                       ),
                     ),
 
-                  const Text("Working Hours",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.brown)),
+                  const Text(
+                    "Working Hours",
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.brown),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
@@ -468,9 +544,11 @@ class _ProviderVerificationScreenState
                       child: _isLoading
                           ? const CircularProgressIndicator(
                           color: Colors.white)
-                          : const Text("Submit for Review",
-                          style: TextStyle(
-                              color: Colors.white, fontSize: 16)),
+                          : const Text(
+                        "Submit for Review",
+                        style: TextStyle(
+                            color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -483,9 +561,12 @@ class _ProviderVerificationScreenState
     );
   }
 
-  Widget _field(String label, TextEditingController controller,
-      IconData icon,
-      {String? hint}) {
+  Widget _field(
+      String label,
+      TextEditingController controller,
+      IconData icon, {
+        String? hint,
+      }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(

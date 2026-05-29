@@ -24,7 +24,6 @@ class AdminDashboard extends StatelessWidget {
     final ordersSnap = await FirebaseFirestore.instance.collection('ORDERS').get();
     final customersSnap = await FirebaseFirestore.instance.collection('CUSTOMERS').get();
 
-    // بيانات شهرية
     List<double> ordersPerMonth = List.filled(6, 0);
     List<double> cancelledPerMonth = List.filled(6, 0);
     List<double> revenuePerMonth = List.filled(6, 0);
@@ -45,7 +44,6 @@ class AdminDashboard extends StatelessWidget {
       }
     }
 
-    // بيانات المستخدمين — ثابتة لأن ما عندك تاريخ تسجيل
     List<double> usersData = List.generate(6, (i) => customersSnap.docs.length.toDouble());
 
     return {

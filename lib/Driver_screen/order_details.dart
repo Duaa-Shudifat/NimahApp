@@ -21,7 +21,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
     setState(() {
       if (currentStatus == "accepted") currentStatus = "picked up";
       else if (currentStatus == "picked up") currentStatus = "on the way";
-      else if (currentStatus == "on the way") currentStatus = "delivered";
+      else if (currentStatus == "on th\e way") currentStatus = "delivered";
       widget.orderData['status'] = currentStatus; // تحديث البيانات الأصلية [32، 42]
     });
   }

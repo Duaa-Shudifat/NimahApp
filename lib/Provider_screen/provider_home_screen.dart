@@ -526,57 +526,18 @@ class _ProviderOrderCard extends StatelessWidget {
     required this.statusFilter,
   });
 
-  Future<void> _updateStatus(String docId, String newStatus) async {
-    await FirebaseFirestore.instance
-        .collection('ORDERS')
-        .doc(docId)
-        .update({'Status': newStatus});
-
-    // جيب بيانات الطلب
-    var orderDoc = await FirebaseFirestore.instance
-        .collection('ORDERS').doc(docId).get();
-    String customerId = orderDoc['Customer_ID'];
-
-    // جيب توكن العميل
-    var customerDoc = await FirebaseFirestore.instance
-        .collection('CUSTOMERS').doc(customerId).get();
-    String? fcmToken = customerDoc['fcmToken'];
-    print("CUSTOMER ID: $customerId");
-    print("FCM TOKEN: $fcmToken");
-
-    // ابعت الإشعار
-    if (fcmToken != null) {
-      await FirebaseFirestore.instance
-          .collection('USER_NOTIFICATIONS')
-          .add({
-        'userId': customerId,
-        'title': _getNotificationTitle(newStatus),
-        'body': _getNotificationBody(newStatus),
-        'type': "delivery",
-        'orderId': docId,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-      await NotificationService.sendNotification(
-        fcmToken: fcmToken,
-        title: _getNotificationTitle(newStatus),
-        body: _getNotificationBody(newStatus),
-        orderId: docId, // ← أضف هاد بس
-        type: "delivery",
-
-
-      );
-    }
-  }
   String _getNotificationTitle(String status) {
     switch (status) {
-      case 'Accepted':
-        return "Your food is being prepared"; // Accept
-      case 'Preparing':
-        return "Your order is ready"; // Make as Done
-      case 'Delivered':
-        return "Delivery on the way"; // Driver picked it up
-      case 'Completed':
-        return "Order delivered! Please rate us"; // Driver delivered
+      case "Accepted":
+        return "Order Accepted ✅";
+      case "Preparing":
+        return "Your Order is Ready 🍽️";
+      case "On the Way":
+        return "Order On The Way 🚗";
+      case "Delivered":
+        return "Order Delivered ✅";
+      case "Cancelled":
+        return "Order Cancelled ❌";
       default:
         return "Order Update";
     }
@@ -584,16 +545,122 @@ class _ProviderOrderCard extends StatelessWidget {
 
   String _getNotificationBody(String status) {
     switch (status) {
-      case 'Accepted':
-        return "The restaurant has started preparing your meal.";
-      case 'Preparing':
-        return "Your meal is ready to be delivered.";
-      case 'Delivered':
-        return "The driver has picked up your order.";
-      case 'Completed':
-        return "Enjoy your meal! Please leave your rating.";
+      case "Accepted":
+        return "Your order has been accepted by the restaurant.";
+      case "Preparing":
+        return "Your order is ready and waiting for a driver.";
+      case "On the Way":
+        return "Your order is on the way.";
+      case "Delivered":
+        return "Your order has been delivered.";
+      case "Cancelled":
+        return "Sorry, your order was cancelled.";
       default:
-        return "";
+        return "Your order status has been updated.";
+    }
+  }
+
+
+  Future<void> _updateStatus(String docId, String newStatus) async {
+    await FirebaseFirestore.instance
+        .collection('ORDERS')
+        .doc(docId)
+        .update({'Status': newStatus});
+
+    final orderDoc = await FirebaseFirestore.instance
+        .collection('ORDERS')
+        .doc(docId)
+        .get();
+
+    final orderData = orderDoc.data();
+    if (orderData == null) return;
+
+    // =========================
+    // 1) إشعار الزبون
+    // =========================
+    final String customerId = orderData['Customer_ID'] ?? '';
+
+    if (customerId.isNotEmpty) {
+      final customerDoc = await FirebaseFirestore.instance
+          .collection('CUSTOMERS')
+          .doc(customerId)
+          .get();
+
+      final customerData = customerDoc.data();
+      final String? customerToken = customerData?['fcmToken'];
+
+      await FirebaseFirestore.instance.collection('USER_NOTIFICATIONS').add({
+        'userId': customerId,
+        'title': _getNotificationTitle(newStatus),
+        'body': _getNotificationBody(newStatus),
+        'type': "order",
+        'orderId': docId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'isRead': false,
+      });
+
+      if (customerToken != null && customerToken.isNotEmpty) {
+        await NotificationService.sendNotification(
+          fcmToken: customerToken,
+          title: _getNotificationTitle(newStatus),
+          body: _getNotificationBody(newStatus),
+          orderId: docId,
+          type: "order",
+        );
+
+        print("Customer notification sent");
+      } else {
+        print("Customer has no fcmToken");
+      }
+    }
+
+    // =========================
+    // 2) إشعار الدرايفر فقط لما المطعم يقبل
+    // =========================
+    if (newStatus == 'Accepted') {
+      final String orderCity = (orderData['City'] ?? '')
+          .toString()
+          .replaceAll(', Jordan', '')
+          .replaceAll(',Jordan', '')
+          .trim()
+          .toLowerCase();
+
+      print("ORDER CITY: '$orderCity'");
+
+      final driversSnap = await FirebaseFirestore.instance
+          .collection('DRIVERS')
+          .get();
+
+      for (var driverDoc in driversSnap.docs) {
+        final driverData = driverDoc.data();
+
+        final String driverCity = (driverData['city'] ?? '')
+            .toString()
+            .replaceAll(', Jordan', '')
+            .replaceAll(',Jordan', '')
+            .trim()
+            .toLowerCase();
+
+        final String? driverToken = driverData['fcmToken'];
+
+        print("DRIVER: ${driverData['name']} | CITY: '$driverCity' | TOKEN: $driverToken");
+
+        if (driverCity == orderCity) {
+          if (driverToken != null && driverToken.isNotEmpty) {
+            await NotificationService.sendNotification(
+              fcmToken: driverToken,
+              title: "New Delivery Available 🚗",
+              body: "A new order is ready for pickup in $orderCity.",
+              orderId: docId,
+              type: "delivery",
+            );
+
+            print("Driver notification sent");
+          } else {
+            print("Driver ${driverData['name']} has no fcmToken");
+          }
+        }
+      }
     }
   }
   @override
@@ -985,6 +1052,9 @@ class _MenuTabState extends State<MenuTab> {
       ),
     );
   }
+
+
+
 
   Future<void> _editMealDialog(String docId, String oldName, String oldPrice,
       int oldAvailable, String currentImg, String oldDescription) async {

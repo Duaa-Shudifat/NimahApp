@@ -7,7 +7,6 @@ import '../1.Launch/launch_welcome_screen.dart';
 import 'I - My profile.dart';
 import 'J - Delivery Adress.dart';
 import 'L - Payment Methods.dart';
-import 'M - Add Card.dart';
 import 'N - Contact Us.dart';
 import 'O - Help & FAQs.dart';
 

@@ -31,7 +31,7 @@ class NotificationService {
       String? token = await messaging.getToken();
 
       final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid == null) return;
+      if (uid == null || token == null) return;
 
       final customerDoc = await FirebaseFirestore.instance
           .collection('CUSTOMERS')
@@ -42,27 +42,50 @@ class NotificationService {
         await FirebaseFirestore.instance
             .collection('CUSTOMERS')
             .doc(uid)
-            .update({'fcmToken': token});
-      } else {
-        final providerDoc = await FirebaseFirestore.instance
+            .set({'fcmToken': token}, SetOptions(merge: true));
+
+        print("Customer token saved from setupNotifications");
+        return;
+      }
+
+      final providerDoc = await FirebaseFirestore.instance
+          .collection('FOOD_PROVIDERS')
+          .doc(uid)
+          .get();
+
+      if (providerDoc.exists) {
+        await FirebaseFirestore.instance
             .collection('FOOD_PROVIDERS')
             .doc(uid)
-            .get();
-        if (providerDoc.exists) {
-          await FirebaseFirestore.instance
-              .collection('FOOD_PROVIDERS')
-              .doc(uid)
-              .update({'fcmToken': token});
-        }
+            .set({'fcmToken': token}, SetOptions(merge: true));
+
+        print("Provider token saved from setupNotifications");
+        return;
+      }
+
+      final driverDoc = await FirebaseFirestore.instance
+          .collection('DRIVERS')
+          .doc(uid)
+          .get();
+
+      if (driverDoc.exists) {
+        await FirebaseFirestore.instance
+            .collection('DRIVERS')
+            .doc(uid)
+            .set({'fcmToken': token}, SetOptions(merge: true));
+
+        print("Driver token saved from setupNotifications");
+        return;
       }
 
       FirebaseMessaging.onMessage.listen((RemoteMessage message) {
         if (message.notification != null) {
+          print("Foreground message title: ${message.notification!.title}");
+          print("Foreground message body: ${message.notification!.body}");
         }
       });
     }
   }
-
   // ✅ دالة إرسال الإشعار عبر V1 API
   static Future<void> sendNotification({
     required String fcmToken,

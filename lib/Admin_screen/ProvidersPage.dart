@@ -171,7 +171,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
               ],
             ),
 
-            // سبب الرفض
             if (status == 'rejected' && rejectionReason.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8),
@@ -196,7 +195,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
 
-                // قبول
                 if (status == 'pending')
                   IconButton(
                     icon: const Icon(Icons.check, color: Colors.green),
@@ -208,7 +206,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
                     },
                   ),
 
-                // رفض
                 if (status == 'pending')
                   IconButton(
                     icon: const Icon(Icons.close, color: Colors.red),
@@ -252,7 +249,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
                     },
                   ),
 
-                // Reapply - للبروفايدر المرفوض
                 if (status == 'rejected')
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Colors.deepOrange),
@@ -268,7 +264,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
                     },
                   ),
 
-                // بلوك/ان بلوك
                 IconButton(
                   icon: Icon(
                     isBlocked ? Icons.lock_open : Icons.block,
@@ -282,7 +277,6 @@ class _ProvidersPageState extends State<ProvidersPage> {
                   },
                 ),
 
-                // فيدباك
                 IconButton(
                   icon: const Icon(Icons.feedback, color: Colors.blue),
                   onPressed: () {

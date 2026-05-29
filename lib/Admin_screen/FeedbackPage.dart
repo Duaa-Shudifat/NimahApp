@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // إضافة المكتبة للربط
-import '../../language/app_strings.dart'; // لترجمة العنوان
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../language/app_strings.dart';
 
 class FeedbackPage extends StatelessWidget {
   final String providerName;
@@ -28,7 +28,7 @@ class FeedbackPage extends StatelessWidget {
               Expanded(
                 child: Center(
                   child: Text(
-                    AppStrings.feedbackTitle, // استخدام النص المترجم "Customer Feedback" [1]
+                    AppStrings.feedbackTitle,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -71,11 +71,10 @@ class FeedbackPage extends StatelessWidget {
                 ),
               ),
 
-              // تعديل الـ ListView لتصبح StreamBuilder لجلب البيانات الحية [64، 69]
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection('RATINGS')
-                    .where('providerName', isEqualTo: providerName) // تصفية التقييمات حسب المزود [1]
+                    .where('providerName', isEqualTo: providerName)
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -119,7 +118,6 @@ class FeedbackPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // 1. عرض النجوم
               Row(
                 children: List.generate(
                   5,
@@ -131,7 +129,6 @@ class FeedbackPage extends StatelessWidget {
                 ),
               ),
 
-              // 2. إظهار اسم السائق لكي يكتمل ربط التقييم بالأطراف الثلاثة [1]
               Text(
                 driverName,
                 style: const TextStyle(

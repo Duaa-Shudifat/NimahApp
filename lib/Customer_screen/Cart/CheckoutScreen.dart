@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../4.Home Page/MyOrdersBar.dart';
 import '../5.Profile/J - Delivery Adress.dart';
 import '../5.Profile/L - Payment Methods.dart';
+import '../Notification/notification_service.dart';
 import 'CartPanel.dart';
 import 'cart_data.dart';
 import 'orders_data.dart';
@@ -256,7 +257,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // ===== PLACE ORDER =====
   void _placeOrder() async {
-    // تحقق إن العنوان والدفع محددين
     if (selectedAddress == "Tap to select address") {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -289,9 +289,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }).toList();
 
     try {
-      // 🔥 الخطوة السحرية الجديدة: جلب الـ ID الطويل والحقيقي للمطعم بناءً على اسمه
+      // ✅ جيب city الزبون
+      final customerDoc = await FirebaseFirestore.instance
+          .collection('CUSTOMERS')
+          .doc(uid)
+          .get();
+      final rawCity = customerDoc['selectedCity'] ?? customerDoc['city'] ?? '';
+// بعد (نفس التنظيف مثل الدرايفر)
+      final customerCity = rawCity.toString()
+          .replaceAll(', Jordan', '')
+          .replaceAll(',Jordan', '')
+          .trim();
+      print("ORDER CITY: '$customerCity'"); // ← هون بس
+
       String providerName = CartData.currentRestaurant;
-      String realProviderId = providerName; // قيمة افتراضية
+      String realProviderId = providerName;
 
       var providerSnapshot = await FirebaseFirestore.instance
           .collection('FOOD_PROVIDERS')
@@ -300,32 +312,60 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           .get();
 
       if (providerSnapshot.docs.isNotEmpty) {
-        realProviderId = providerSnapshot.docs.first.id; // هاد هو الكود الطويل الصح!
+        realProviderId = providerSnapshot.docs.first.id;
       }
 
       final orderData = {
         "Customer_ID": uid,
         "Driver_ID": "",
+        "City": customerCity, // ✅
         "Items": itemsList,
         "Notes": noteController.text.trim(),
         "Order_Date": FieldValue.serverTimestamp(),
-        "Provider_ID": realProviderId, // استخدام الـ ID الحقيقي بدل كلمة "res"
+        "Provider_ID": realProviderId,
         "Provider_Name": providerName,
         "Provider_Image": CartData.currentRestaurantImage,
-        "Status": "Pending",
-        "Total_Price": total,
+        "Status": "Pending",  // ← هيك صح        "Total_Price": total,
         "Payment_Method": selectedPayment,
         "Address": selectedAddress,
       };
 
-      // 1. تسجيل الطلب في الفايربيس
-      await FirebaseFirestore.instance.collection('ORDERS').add(orderData);
+      final orderRef = await FirebaseFirestore.instance.collection('ORDERS').add(orderData);
+      final String orderId = orderRef.id;
 
-      // 2. التعديل الجديد: خصم الكمية من مخزون المطعم باستخدام الـ ID الحقيقي 🔥
+
+
+// جيب fcmToken المطعم وابعتله إشعار
+      final providerDoc = await FirebaseFirestore.instance
+          .collection('FOOD_PROVIDERS')
+          .doc(realProviderId)
+          .get();
+
+      final String? providerToken = providerDoc['fcmToken'];
+
+      if (providerToken != null) {
+        await NotificationService.sendNotification(
+          fcmToken: providerToken,
+          title: "New Order Received! 🍽️",
+          body: "You have a new order waiting for your approval.",
+          orderId: orderId,
+          type: "order",
+        );
+        await FirebaseFirestore.instance
+            .collection('USER_NOTIFICATIONS')
+            .add({
+          'userId': realProviderId,
+          'title': "New Order Received! 🍽️",
+          'body': "You have a new order waiting for your approval.",
+          'type': "order",
+          'orderId': orderId,
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
       for (var item in items) {
         var mealQuery = await FirebaseFirestore.instance
             .collection('FOOD_PROVIDERS')
-            .doc(realProviderId) // استخدمنا الكود الطويل هون عشان يلاقيه ويخصم
+            .doc(realProviderId)
             .collection('MENU')
             .where('name', isEqualTo: item.title)
             .limit(1)
@@ -333,7 +373,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
         if (mealQuery.docs.isNotEmpty) {
           String mealDocId = mealQuery.docs.first.id;
-
           await FirebaseFirestore.instance
               .collection('FOOD_PROVIDERS')
               .doc(realProviderId)
@@ -345,11 +384,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         }
       }
 
-      // 3. تنظيف السلة بعد نجاح الطلب
       CartData.cartItems.clear();
       CartData.currentRestaurant = "";
 
-      // 4. توجيه العميل لشاشة النجاح
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const ActiveOrdersEmptyScreen()),
