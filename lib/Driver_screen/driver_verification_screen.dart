@@ -8,7 +8,8 @@ class DriverVerificationScreen extends StatefulWidget {
   const DriverVerificationScreen({super.key});
 
   @override
-  State<DriverVerificationScreen> createState() => _DriverVerificationScreenState();
+  State<DriverVerificationScreen> createState() =>
+      _DriverVerificationScreenState();
 }
 
 class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
@@ -43,10 +44,7 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
 
     setState(() => _isLoading = true);
 
-    await FirebaseFirestore.instance
-        .collection('DRIVERS')
-        .doc(uid)
-        .update({
+    await FirebaseFirestore.instance.collection('DRIVERS').doc(uid).update({
       'driverLicense': _licenseController.text.trim(),
       'carModel': _carModelController.text.trim(),
       'carPlate': _carPlateController.text.trim(),
@@ -55,6 +53,7 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
       'agreedToPledge': true,
       'VerificationStatus': 'pending',
       'rejectionReason': null,
+      'hasSeenAcceptedScreen': false, // ✅ reset عند كل تقديم جديد
     });
 
     setState(() => _isLoading = false);
@@ -92,11 +91,15 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+            final data =
+                snapshot.data!.data() as Map<String, dynamic>? ?? {};
             final status = data['VerificationStatus'] ?? 'new';
             final bool isBlocked = data['blocked'] ?? false;
+            // ✅ نفس اسم الـ field اللي عند Provider
+            final bool hasSeenAccepted =
+                data['hasSeenAcceptedScreen'] ?? false;
 
-            // BLOCKED
+            // ─── BLOCKED ───────────────────────────────────────────
             if (isBlocked) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -106,10 +109,9 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                   const Text(
                     "Your account has been blocked.\nPlease contact support.",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 40),
@@ -119,6 +121,7 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         await FirebaseAuth.instance.signOut();
+                        if (!context.mounted) return;
                         Navigator.pushAndRemoveUntil(
                           context,
                           MaterialPageRoute(
@@ -140,69 +143,91 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // PENDING / ACCEPTED / REJECTED
-            if (status == 'pending' || status == 'accepted' || status == 'rejected') {
+            // ─── ACCEPTED — first time: شاشة القبول ───────────────
+            if (status == 'accepted' && !hasSeenAccepted) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    status == 'accepted'
-                        ? Icons.check_circle
-                        : status == 'rejected'
-                        ? Icons.cancel
-                        : Icons.hourglass_top,
-                    size: 80,
-                    color: status == 'accepted'
-                        ? Colors.green
-                        : status == 'rejected'
-                        ? Colors.red
-                        : Colors.orange,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    status == 'pending'
-                        ? "Under Review... Please wait."
-                        : status == 'accepted'
-                        ? "Accepted! 🎉 Press Continue."
-                        : "Rejected ❌ Please contact support.",
+                  const Icon(Icons.celebration, size: 90, color: Colors.green),
+                  const SizedBox(height: 24),
+                  const Text(
+                    "🎉 Congratulations!",
                     style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: status == 'accepted'
-                          ? Colors.green
-                          : status == 'rejected'
-                          ? Colors.red
-                          : Colors.orange,
-                    ),
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green),
                     textAlign: TextAlign.center,
                   ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    "Your account has been approved.\nYou can now start delivering!",
+                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        // ✅ سجّل إن السائق شاف شاشة القبول
+                        await FirebaseFirestore.instance
+                            .collection('DRIVERS')
+                            .doc(uid)
+                            .update({'hasSeenAcceptedScreen': true});
 
-                  // سبب الرفض
-                  if (status == 'rejected' &&
-                      data['rejectionReason'] != null &&
-                      data['rejectionReason'].toString().isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade50,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.red.shade200),
-                        ),
-                        child: Text(
-                          "Reason: ${data['rejectionReason']}",
+                        if (!context.mounted) return;
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const DriverDashboard()),
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_forward, color: Colors.white),
+                      label: const Text("Start Delivering 🚗",
                           style:
-                          const TextStyle(color: Colors.red, fontSize: 14),
-                          textAlign: TextAlign.center,
-                        ),
+                          TextStyle(color: Colors.white, fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
                       ),
                     ),
+                  ),
+                ],
+              );
+            }
 
+            // ─── ACCEPTED — already seen: داشبورد مباشرة ──────────
+            if (status == 'accepted' && hasSeenAccepted) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DriverDashboard()),
+                );
+              });
+              return const Center(
+                child: CircularProgressIndicator(color: Colors.green),
+              );
+            }
+
+            // ─── PENDING ───────────────────────────────────────────
+            if (status == 'pending') {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.hourglass_top,
+                      size: 80, color: Colors.orange),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Under Review... Please wait.",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange),
+                    textAlign: TextAlign.center,
+                  ),
                   const SizedBox(height: 40),
-
-                  // Back to Home
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -226,88 +251,118 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: 15),
-
-                  // Continue - accepted فقط
-                  if (status == 'accepted')
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => const DriverDashboard()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                        ),
-                        child: const Text("Continue",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 18)),
-                      ),
-                    ),
-
-                  // Reapply - rejected فقط
-                  if (status == 'rejected')
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          await FirebaseFirestore.instance
-                              .collection('DRIVERS')
-                              .doc(uid)
-                              .update({
-                            'VerificationStatus': 'new',
-                            'rejectionReason': null,
-                          });
-                        },
-                        icon:
-                        const Icon(Icons.refresh, color: Colors.white),
-                        label: const Text("Reapply",
-                            style: TextStyle(
-                                color: Colors.white, fontSize: 16)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.deepOrange,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15)),
-                        ),
-                      ),
-                    ),
                 ],
               );
             }
 
-            // FORM - new أو أي status ثاني
+            // ─── REJECTED ──────────────────────────────────────────
+            if (status == 'rejected') {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.cancel, size: 80, color: Colors.red),
+                  const SizedBox(height: 20),
+                  const Text(
+                    "Rejected ❌ Please contact support.",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.red),
+                    textAlign: TextAlign.center,
+                  ),
+                  if (data['rejectionReason'] != null &&
+                      data['rejectionReason'].toString().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.red.shade200),
+                        ),
+                        child: Text(
+                          "Reason: ${data['rejectionReason']}",
+                          style: const TextStyle(
+                              color: Colors.red, fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const LaunchWelcomeScreen()),
+                              (route) => false,
+                        );
+                      },
+                      icon: const Icon(Icons.arrow_back, color: Colors.orange),
+                      label: const Text("Back to Home",
+                          style:
+                          TextStyle(color: Colors.orange, fontSize: 16)),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.orange),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 15),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        await FirebaseFirestore.instance
+                            .collection('DRIVERS')
+                            .doc(uid)
+                            .update({
+                          'VerificationStatus': 'new',
+                          'rejectionReason': null,
+                          'hasSeenAcceptedScreen': false,
+                        });
+                      },
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      label: const Text("Reapply",
+                          style:
+                          TextStyle(color: Colors.white, fontSize: 16)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepOrange,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15)),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            // ─── FORM ──────────────────────────────────────────────
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SizedBox(height: 10),
                   const Text("Please fill in your details",
-                      style:
-                      TextStyle(fontSize: 16, color: Colors.brown)),
+                      style: TextStyle(fontSize: 16, color: Colors.brown)),
                   const SizedBox(height: 20),
-
                   _field("Driver License Number", _licenseController,
                       Icons.badge),
                   _field("Car Model (e.g. Toyota Corolla)",
                       _carModelController, Icons.directions_car),
-                  _field(
-                      "Car Plate Number", _carPlateController, Icons.pin),
+                  _field("Car Plate Number", _carPlateController, Icons.pin),
                   _field("Car Year (e.g. 2020)", _carYearController,
                       Icons.calendar_today),
                   _field("Years of Experience", _experienceController,
                       Icons.work),
-
                   const SizedBox(height: 10),
-
                   Container(
                     padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
@@ -328,16 +383,14 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                         const Expanded(
                           child: Text(
                             "I pledge to deliver orders safely and on time, treat customers with respect, and follow all traffic laws. I take full responsibility for any violation.",
-                            style: TextStyle(
-                                fontSize: 13, color: Colors.brown),
+                            style:
+                            TextStyle(fontSize: 13, color: Colors.brown),
                           ),
                         ),
                       ],
                     ),
                   ),
-
                   const SizedBox(height: 25),
-
                   SizedBox(
                     width: double.infinity,
                     height: 50,

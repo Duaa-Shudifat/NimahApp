@@ -110,7 +110,9 @@ class _DriverRequestsPageState extends State<DriverRequestsPage> {
           title: const Text(
             "Delivery Orders",
             style: TextStyle(
-                color: Colors.brown, fontWeight: FontWeight.bold),
+              color: Colors.brown,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           centerTitle: true,
           bottom: const TabBar(
@@ -167,9 +169,6 @@ class _DriverRequestsPageState extends State<DriverRequestsPage> {
   }
 }
 
-// ─────────────────────────────────────────
-// Widget مشترك لعرض الطلبات حسب التبويب
-// ─────────────────────────────────────────
 class _DriverOrdersList extends StatelessWidget {
   final String driverUid;
   final int tabIndex;
@@ -219,22 +218,26 @@ class _DriverOrdersList extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.delivery_dining,
-                    size: 64, color: Colors.grey.shade300),
+                Icon(
+                  Icons.delivery_dining,
+                  size: 64,
+                  color: Colors.grey.shade300,
+                ),
                 const SizedBox(height: 10),
                 Text(
                   tabIndex == 0
                       ? "No new orders available"
                       : "Nothing here yet",
-                  style:
-                  TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
           );
         }
 
-        // فلتر المدينة للتبويب الأول فقط
         final orders = tabIndex == 0
             ? snapshot.data!.docs.where((doc) {
           final data = doc.data() as Map<String, dynamic>;
@@ -244,6 +247,7 @@ class _DriverOrdersList extends StatelessWidget {
               .replaceAll(',Jordan', '')
               .trim()
               .toLowerCase();
+
           return city == driverCity.toLowerCase();
         }).toList()
             : snapshot.data!.docs;
@@ -253,13 +257,18 @@ class _DriverOrdersList extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.delivery_dining,
-                    size: 64, color: Colors.grey.shade300),
+                Icon(
+                  Icons.delivery_dining,
+                  size: 64,
+                  color: Colors.grey.shade300,
+                ),
                 const SizedBox(height: 10),
                 Text(
                   "No orders in your city yet",
-                  style:
-                  TextStyle(color: Colors.grey.shade400, fontSize: 16),
+                  style: TextStyle(
+                    color: Colors.grey.shade400,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -272,6 +281,7 @@ class _DriverOrdersList extends StatelessWidget {
           itemBuilder: (context, index) {
             final doc = orders.elementAt(index);
             final data = doc.data() as Map<String, dynamic>;
+
             return _DriverOrderCard(
               orderId: doc.id,
               data: data,
@@ -287,9 +297,6 @@ class _DriverOrdersList extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────
-// كرت الطلب للدرايفر
-// ─────────────────────────────────────────
 class _DriverOrderCard extends StatefulWidget {
   final String orderId;
   final Map<String, dynamic> data;
@@ -316,10 +323,12 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
 
   Future<void> _acceptOrder() async {
     setState(() => _isLoading = true);
+
     try {
       final docRef = FirebaseFirestore.instance
           .collection('ORDERS')
           .doc(widget.orderId);
+
       final orderSnap = await docRef.get();
       final orderData = orderSnap.data() as Map<String, dynamic>;
       final customerId = orderData['Customer_ID'];
@@ -337,9 +346,11 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
           .collection('CUSTOMERS')
           .doc(customerId)
           .get();
-      final fcmToken = customerDoc['fcmToken'];
 
-      if (fcmToken != null) {
+      final customerData = customerDoc.data() as Map<String, dynamic>?;
+      final fcmToken = customerData?['fcmToken'];
+
+      if (fcmToken != null && fcmToken.toString().isNotEmpty) {
         await NotificationService.sendNotification(
           fcmToken: fcmToken,
           title: "Delivery on the way",
@@ -347,27 +358,32 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
           orderId: widget.orderId,
           type: "delivery",
         );
-        await FirebaseFirestore.instance
-            .collection('USER_NOTIFICATIONS')
-            .add({
-          'userId': customerId,
-          'title': "Delivery on the way",
-          'body': "The driver has picked up your order.",
-          'type': "delivery",
-          'orderId': widget.orderId,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
       }
+
+      await FirebaseFirestore.instance
+          .collection('USER_NOTIFICATIONS')
+          .add({
+        'userId': customerId,
+        'title': "Delivery on the way",
+        'body': "The driver has picked up your order.",
+        'type': "delivery",
+        'orderId': widget.orderId,
+        'isRead': false,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
       widget.onAccepted(widget.orderId);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
+
     if (mounted) setState(() => _isLoading = false);
   }
 
@@ -375,19 +391,24 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
     final docRef = FirebaseFirestore.instance
         .collection('ORDERS')
         .doc(widget.orderId);
+
     final orderSnap = await docRef.get();
     final orderData = orderSnap.data() as Map<String, dynamic>;
     final customerId = orderData['Customer_ID'];
 
-    await docRef.update({'Status': 'Delivered'});
+    await docRef.update({
+      'Status': 'Delivered',
+    });
 
     final customerDoc = await FirebaseFirestore.instance
         .collection('CUSTOMERS')
         .doc(customerId)
         .get();
-    final fcmToken = customerDoc['fcmToken'];
 
-    if (fcmToken != null) {
+    final customerData = customerDoc.data() as Map<String, dynamic>?;
+    final fcmToken = customerData?['fcmToken'];
+
+    if (fcmToken != null && fcmToken.toString().isNotEmpty) {
       await NotificationService.sendNotification(
         fcmToken: fcmToken,
         title: "Order delivered! Please rate us",
@@ -395,17 +416,19 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
         orderId: widget.orderId,
         type: "delivery",
       );
-      await FirebaseFirestore.instance
-          .collection('USER_NOTIFICATIONS')
-          .add({
-        'userId': customerId,
-        'title': "Order delivered! Please rate us",
-        'body': "Enjoy your meal! Please leave your rating.",
-        'type': "delivery",
-        'orderId': widget.orderId,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
     }
+
+    await FirebaseFirestore.instance
+        .collection('USER_NOTIFICATIONS')
+        .add({
+      'userId': customerId,
+      'title': "Order delivered! Please rate us",
+      'body': "Enjoy your meal! Please leave your rating.",
+      'type': "delivery",
+      'orderId': widget.orderId,
+      'isRead': false,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
 
     widget.onDelivered();
   }
@@ -445,9 +468,9 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
           .get(),
       builder: (context, customerSnap) {
         String customerName = "Loading...";
+
         if (customerSnap.hasData && customerSnap.data!.exists) {
-          final cData =
-          customerSnap.data!.data() as Map<String, dynamic>;
+          final cData = customerSnap.data!.data() as Map<String, dynamic>;
           customerName = cData['name'] ?? 'Unknown';
         }
 
@@ -465,71 +488,69 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     "Order #${widget.orderId.substring(0, 6).toUpperCase()}",
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 15,
-                        color: Colors.brown),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: Colors.brown,
+                    ),
                   ),
                   _StatusBadge(status: status),
                 ],
               ),
               const Divider(height: 20),
-
-              // Info rows
               _infoRow(Icons.person, "Customer", customerName),
               _infoRow(Icons.location_on, "Address", address),
               _infoRow(Icons.location_city, "City", city),
               _infoRow(Icons.payment, "Payment", payment),
-              if (notes.isNotEmpty)
-                _infoRow(Icons.note, "Notes", notes),
-
+              if (notes.isNotEmpty) _infoRow(Icons.note, "Notes", notes),
               const SizedBox(height: 10),
-
-              // Items
               const Text(
                 "🍽️ Items:",
                 style: TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.brown),
+                  fontWeight: FontWeight.bold,
+                  color: Colors.brown,
+                ),
               ),
               const SizedBox(height: 6),
               ...items.map((item) {
                 final name = item['Product_ID'] ?? '';
                 final qty = item['Quantity'] ?? 1;
+
                 return Padding(
                   padding: const EdgeInsets.only(left: 8, bottom: 4),
                   child: Row(
                     children: [
-                      const Icon(Icons.circle,
-                          size: 6, color: Colors.deepOrange),
+                      const Icon(
+                        Icons.circle,
+                        size: 6,
+                        color: Colors.deepOrange,
+                      ),
                       const SizedBox(width: 8),
-                      Text("$name  ×$qty",
-                          style: const TextStyle(fontSize: 14)),
+                      Text(
+                        "$name  ×$qty",
+                        style: const TextStyle(fontSize: 14),
+                      ),
                     ],
                   ),
                 );
               }),
-
               const SizedBox(height: 10),
-
-              // Total
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
                   "Total: ${total.toStringAsFixed(2)} JD",
                   style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                      color: Colors.deepOrange),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: Colors.deepOrange,
+                  ),
                 ),
               ),
-
-              // Action buttons
               if (widget.tabIndex == 0) ...[
                 const SizedBox(height: 12),
                 SizedBox(
@@ -539,19 +560,27 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
                     onPressed: _isLoading ? null : _acceptOrder,
                     icon: _isLoading
                         ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2))
-                        : const Icon(Icons.delivery_dining,
-                        color: Colors.white, size: 18),
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                        : const Icon(
+                      Icons.delivery_dining,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     label: Text(
-                        _isLoading ? "Accepting..." : "Accept Order",
-                        style: const TextStyle(color: Colors.white)),
+                      _isLoading ? "Accepting..." : "Accept Order",
+                      style: const TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -562,14 +591,20 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
                   height: 48,
                   child: ElevatedButton.icon(
                     onPressed: _markDelivered,
-                    icon: const Icon(Icons.check_circle,
-                        color: Colors.white, size: 18),
-                    label: const Text("Mark as Delivered",
-                        style: TextStyle(color: Colors.white)),
+                    icon: const Icon(
+                      Icons.check_circle,
+                      color: Colors.white,
+                      size: 18,
+                    ),
+                    label: const Text(
+                      "Mark as Delivered",
+                      style: TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepOrange,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
@@ -589,15 +624,22 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
         children: [
           Icon(icon, size: 15, color: Colors.deepOrange),
           const SizedBox(width: 6),
-          Text("$label: ",
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  color: Colors.brown)),
+          Text(
+            "$label: ",
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: Colors.brown,
+            ),
+          ),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(
-                    fontSize: 13, color: Colors.black87)),
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+              ),
+            ),
           ),
         ],
       ),
@@ -605,11 +647,9 @@ class _DriverOrderCardState extends State<_DriverOrderCard> {
   }
 }
 
-// ─────────────────────────────────────────
-// Badge صغير للحالة
-// ─────────────────────────────────────────
 class _StatusBadge extends StatelessWidget {
   final String status;
+
   const _StatusBadge({required this.status});
 
   Color get _color {
@@ -639,7 +679,10 @@ class _StatusBadge extends StatelessWidget {
       child: Text(
         status,
         style: TextStyle(
-            color: _color, fontSize: 12, fontWeight: FontWeight.bold),
+          color: _color,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

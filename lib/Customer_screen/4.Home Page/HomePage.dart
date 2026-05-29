@@ -26,8 +26,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserCity();
-    _updateProductCategories(); // ✅
-
+    _updateProductCategories();
   }
 
   Future<void> _loadUserCity() async {
@@ -100,19 +99,24 @@ class _HomePageState extends State<HomePage> {
                     color: Colors.grey.shade100,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                        color: Colors.deepOrange.withOpacity(0.4)),
+                      color: Colors.deepOrange.withOpacity(0.4),
+                    ),
                   ),
                   child: TextField(
                     controller: _addrController,
                     readOnly: true,
                     style: const TextStyle(fontSize: 15),
                     decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.location_on_rounded,
-                          color: Colors.deepOrange),
+                      prefixIcon: Icon(
+                        Icons.location_on_rounded,
+                        color: Colors.deepOrange,
+                      ),
                       hintText: 'Enter your address...',
                       border: InputBorder.none,
                       contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 14),
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
@@ -120,9 +124,10 @@ class _HomePageState extends State<HomePage> {
                 const Text(
                   'Quick select',
                   style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500),
+                    fontSize: 13,
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Wrap(
@@ -146,22 +151,32 @@ class _HomePageState extends State<HomePage> {
                       onTap: () => _addrController.text = city,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFFF3DC),
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                              color: Colors.deepOrange.withOpacity(0.3)),
+                            color: Colors.deepOrange.withOpacity(0.3),
+                          ),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.location_city_rounded,
-                                size: 14, color: Colors.deepOrange),
+                            const Icon(
+                              Icons.location_city_rounded,
+                              size: 14,
+                              color: Colors.deepOrange,
+                            ),
                             const SizedBox(width: 5),
-                            Text(city,
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.brown)),
+                            Text(
+                              city,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.brown,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -175,8 +190,10 @@ class _HomePageState extends State<HomePage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       final newAddr = _addrController.text.trim();
+
                       if (newAddr.isNotEmpty) {
                         setState(() => _deliveryAddress = newAddr);
+
                         final user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
                           await FirebaseFirestore.instance
@@ -185,19 +202,22 @@ class _HomePageState extends State<HomePage> {
                               .update({'selectedCity': newAddr});
                         }
                       }
+
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepOrange,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                     child: const Text(
                       'Confirm address',
                       style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white),
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -209,12 +229,175 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+  Widget _notificationBell() {
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return InkWell(
+        onTap: _openNotificationsPanel,
+        borderRadius: BorderRadius.circular(50),
+        child: SizedBox(
+          width: 46,
+          height: 46,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: SvgPicture.asset(
+                  'assets/icons/notification.svg',
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('USER_NOTIFICATIONS')
+          .where('userId', isEqualTo: user.uid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        bool hasUnread = false;
+
+        if (snapshot.hasData) {
+          for (final doc in snapshot.data!.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+
+            if (data['isRead'] != true) {
+              hasUnread = true;
+              break;
+            }
+          }
+        }
+
+        return InkWell(
+          onTap: () async {
+            await _markNotificationsAsRead();
+            _openNotificationsPanel();
+          },
+          borderRadius: BorderRadius.circular(50),
+          child: SizedBox(
+            width: 46,
+            height: 46,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                    child: SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: SvgPicture.asset(
+                        'assets/icons/notification.svg',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                  ),
+                ),
+                if (hasUnread)
+                  Positioned(
+                    top: 4,
+                    right: 4,
+                    child: Container(
+                      width: 13,
+                      height: 13,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _markNotificationsAsRead() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snap = await FirebaseFirestore.instance
+        .collection('USER_NOTIFICATIONS')
+        .where('userId', isEqualTo: user.uid)
+        .get();
+
+    if (snap.docs.isEmpty) return;
+
+    final batch = FirebaseFirestore.instance.batch();
+
+    for (final doc in snap.docs) {
+      final data = doc.data();
+
+      if (data['isRead'] != true) {
+        batch.update(doc.reference, {
+          'isRead': true,
+        });
+      }
+    }
+
+    await batch.commit();
+  }
+  void _openNotificationsPanel() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: "Notifications",
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, _, __) {
+        final isArabic = AppStrings.isArabic;
+
+        return Align(
+          alignment: isArabic ? Alignment.centerLeft : Alignment.centerRight,
+          child: Material(
+            color: Colors.transparent,
+            child: SizedBox(
+              width: MediaQuery.of(context).size.width * 0.80,
+              height: MediaQuery.of(context).size.height,
+              child: const NotificationsPanel(),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, _, child) {
+        final isArabic = AppStrings.isArabic;
+
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: isArabic ? const Offset(-1, 0) : const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection:
-      AppStrings.isArabic ? TextDirection.rtl : TextDirection.ltr,
+      textDirection: AppStrings.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5CB58),
         body: Column(
@@ -240,21 +423,22 @@ class _HomePageState extends State<HomePage> {
                           child: Container(
                             height: 46,
                             margin: const EdgeInsets.only(top: 10),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14),
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(23),
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.location_on_rounded,
-                                    color: Colors.deepOrange, size: 20),
+                                const Icon(
+                                  Icons.location_on_rounded,
+                                  color: Colors.deepOrange,
+                                  size: 20,
+                                ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Column(
-                                    mainAxisAlignment:
-                                    MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                     children: [
@@ -279,132 +463,112 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.deepOrange,
-                                    size: 20),
+                                  Icons.keyboard_arrow_down_rounded,
+                                  color: Colors.deepOrange,
+                                  size: 20,
+                                ),
                               ],
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(width: 10),
-                      circleSvgIcon1(context, 'assets/icons/cart.svg',
-                              () {
-                            showGeneralDialog(
-                              context: context,
-                              barrierDismissible: true,
-                              barrierLabel: "Cart",
-                              barrierColor: Colors.black54,
-                              transitionDuration:
-                              const Duration(milliseconds: 300),
-                              pageBuilder: (context, _, __) {
-                                final isArabic = AppStrings.isArabic;
-                                return Align(
-                                  alignment: isArabic
-                                      ? Alignment.centerLeft
-                                      : Alignment.centerRight,
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: SizedBox(
-                                      width: MediaQuery.of(context).size.width * 0.80,
-                                      height: MediaQuery.of(context).size.height,
-                                      child: const CartPanel(),
-                                    ),
+
+                      circleSvgIcon1(
+                        context,
+                        'assets/icons/cart.svg',
+                            () {
+                          showGeneralDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            barrierLabel: "Cart",
+                            barrierColor: Colors.black54,
+                            transitionDuration:
+                            const Duration(milliseconds: 300),
+                            pageBuilder: (context, _, __) {
+                              final isArabic = AppStrings.isArabic;
+
+                              return Align(
+                                alignment: isArabic
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: SizedBox(
+                                    width:
+                                    MediaQuery.of(context).size.width * 0.80,
+                                    height: MediaQuery.of(context).size.height,
+                                    child: const CartPanel(),
                                   ),
-                                );
-                              },
-                              transitionBuilder: (context, animation, _, child) {
-                                final isArabic = AppStrings.isArabic;
-                                return SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: isArabic
-                                        ? const Offset(-1, 0)
-                                        : const Offset(1, 0),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                );
-                              },
-                            );
-                          }),
-                      circleSvgIcon1(
-                          context, 'assets/icons/notification.svg', () {
-                        showGeneralDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierLabel: "Notifications",
-                          barrierColor: Colors.black54,
-                          transitionDuration:
-                          const Duration(milliseconds: 300),
-                          pageBuilder: (context, _, __) {
-                            final isArabic = AppStrings.isArabic;
-                            return Align(
-                              alignment: isArabic
-                                  ? Alignment.centerLeft
-                                  : Alignment.centerRight,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.80,
-                                  height: MediaQuery.of(context).size.height,
-                                  child: const NotificationsPanel(),
                                 ),
-                              ),
-                            );
-                          },
-                          transitionBuilder: (context, animation, _, child) {
-                            final isArabic = AppStrings.isArabic;
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: isArabic
-                                    ? const Offset(-1, 0)
-                                    : const Offset(1, 0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            );
-                          },
-                        );
-                      }),
+                              );
+                            },
+                            transitionBuilder:
+                                (context, animation, _, child) {
+                              final isArabic = AppStrings.isArabic;
+
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: isArabic
+                                      ? const Offset(-1, 0)
+                                      : const Offset(1, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              );
+                            },
+                          );
+                        },
+                      ),
+
+                      _notificationBell(),
+
                       circleSvgIcon1(
-                          context, 'assets/icons/profile.svg', () {
-                        showGeneralDialog(
-                          context: context,
-                          barrierDismissible: true,
-                          barrierLabel: "Profile",
-                          barrierColor: Colors.black54,
-                          transitionDuration:
-                          const Duration(milliseconds: 300),
-                          pageBuilder: (context, _, __) {
-                            final isArabic = AppStrings.isArabic;
-                            return Align(
-                              alignment: isArabic
-                                  ? Alignment.centerLeft
-                                  : Alignment.centerRight,
-                              child: Material(
-                                color: Colors.transparent,
-                                child: SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.80,
-                                  height: MediaQuery.of(context).size.height,
-                                  child: const ProfileScreen(),
+                        context,
+                        'assets/icons/profile.svg',
+                            () {
+                          showGeneralDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            barrierLabel: "Profile",
+                            barrierColor: Colors.black54,
+                            transitionDuration:
+                            const Duration(milliseconds: 300),
+                            pageBuilder: (context, _, __) {
+                              final isArabic = AppStrings.isArabic;
+
+                              return Align(
+                                alignment: isArabic
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: SizedBox(
+                                    width:
+                                    MediaQuery.of(context).size.width * 0.80,
+                                    height: MediaQuery.of(context).size.height,
+                                    child: const ProfileScreen(),
+                                  ),
                                 ),
-                              ),
-                            );
-                          },
-                          transitionBuilder: (context, animation, _, child) {
-                            final isArabic = AppStrings.isArabic;
-                            return SlideTransition(
-                              position: Tween<Offset>(
-                                begin: isArabic
-                                    ? const Offset(-1, 0)
-                                    : const Offset(1, 0),
-                                end: Offset.zero,
-                              ).animate(animation),
-                              child: child,
-                            );
-                          },
-                        ).then((_) => _loadUserCity()); // ✅
-                      }),
+                              );
+                            },
+                            transitionBuilder:
+                                (context, animation, _, child) {
+                              final isArabic = AppStrings.isArabic;
+
+                              return SlideTransition(
+                                position: Tween<Offset>(
+                                  begin: isArabic
+                                      ? const Offset(-1, 0)
+                                      : const Offset(1, 0),
+                                  end: Offset.zero,
+                                ).animate(animation),
+                                child: child,
+                              );
+                            },
+                          ).then((_) => _loadUserCity());
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -423,6 +587,7 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
+
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -480,13 +645,14 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 20),
                       _sectionTitle(AppStrings.bestSeller),
                       const SizedBox(height: 10),
-                      _buildBestSeller(), // ✅
+                      _buildBestSeller(),
                       const SizedBox(height: 20),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            padding:
+                            const EdgeInsets.symmetric(horizontal: 15),
                             child: Text(
                               AppStrings.recommended,
                               style: const TextStyle(
@@ -496,7 +662,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           const SizedBox(height: 10),
-                          _buildRecommended(), // ✅
+                          _buildRecommended(),
                         ],
                       ),
                       const SizedBox(height: 20),
@@ -512,7 +678,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // ===== FIRESTORE WIDGETS =====
   Widget _buildBestSeller() {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance
@@ -520,27 +685,23 @@ class _HomePageState extends State<HomePage> {
           .where('category', isEqualTo: 'best_seller')
           .snapshots(),
       builder: (context, snapshot) {
-
-        //
-        // if (!snapshot.hasData) {
-
-        if (true) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return SizedBox(
             height: 150,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _foodCard("assets/images/food_card1.png", "\JD10.3"),
-                _foodCard("assets/images/food_card2.png", "\JD12.0"),
-                _foodCard("assets/images/food_card3.png", "\JD8.50"),
-                _foodCard("assets/images/food_card4.png", "\JD9.00"),
+                _foodCard("assets/images/food_card1.png", "JD10.3"),
+                _foodCard("assets/images/food_card2.png", "JD12.0"),
+                _foodCard("assets/images/food_card3.png", "JD8.50"),
+                _foodCard("assets/images/food_card4.png", "JD9.00"),
               ],
             ),
           );
         }
 
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty) return const SizedBox.shrink();
+
         return SizedBox(
           height: 150,
           child: ListView.builder(
@@ -548,7 +709,11 @@ class _HomePageState extends State<HomePage> {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
-              return _productCard(data['imageUrl'] ?? '', '\$${data['price']}');
+
+              return _productCard(
+                data['imageUrl'] ?? '',
+                'JD${data['price']}',
+              );
             },
           ),
         );
@@ -563,24 +728,22 @@ class _HomePageState extends State<HomePage> {
           .where('category', isEqualTo: 'recommended')
           .snapshots(),
       builder: (context, snapshot) {
-
-        //if (!snapshot.hasData) {
-        if (true) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return SizedBox(
             height: 170,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _recommendedCard('assets/images/food_rec1.png', '\JD12'),
-                _recommendedCard('assets/images/food_rec2.png', '\JD18'),
-                _recommendedCard('assets/images/food_rec3.png', '\JD18'),
+                _recommendedCard('assets/images/food_rec1.png', 'JD12'),
+                _recommendedCard('assets/images/food_rec2.png', 'JD18'),
+                _recommendedCard('assets/images/food_rec3.png', 'JD18'),
               ],
             ),
           );
         }
 
         final docs = snapshot.data!.docs;
-        if (docs.isEmpty) return const SizedBox.shrink();
+
         return SizedBox(
           height: 170,
           child: ListView.builder(
@@ -588,7 +751,11 @@ class _HomePageState extends State<HomePage> {
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final data = docs[index].data() as Map<String, dynamic>;
-              return _recommendedCardNetwork(data['imageUrl'] ?? '', '\$${data['price']}');
+
+              return _recommendedCardNetwork(
+                data['imageUrl'] ?? '',
+                'JD${data['price']}',
+              );
             },
           ),
         );
@@ -622,15 +789,21 @@ class _HomePageState extends State<HomePage> {
             bottom: 20,
             left: 10,
             child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 8,
+                vertical: 3,
+              ),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Text(price,
-                  style: const TextStyle(
-                      color: Colors.white, fontSize: 11)),
+              child: Text(
+                price,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                ),
+              ),
             ),
           ),
         ],
@@ -643,8 +816,9 @@ class _HomePageState extends State<HomePage> {
       width: 160,
       height: 170,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      decoration:
-      BoxDecoration(borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Stack(
         children: [
           ClipRRect(
@@ -663,7 +837,9 @@ class _HomePageState extends State<HomePage> {
             right: 10,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 5),
+                horizontal: 10,
+                vertical: 5,
+              ),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(12),
@@ -671,9 +847,10 @@ class _HomePageState extends State<HomePage> {
               child: Text(
                 price,
                 style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -681,8 +858,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-  // ===== STATIC WIDGETS =====
 
   static Widget circleSvgIcon1(
       BuildContext context,
@@ -702,7 +877,10 @@ class _HomePageState extends State<HomePage> {
         child: SizedBox(
           width: 22,
           height: 22,
-          child: SvgPicture.asset(path, fit: BoxFit.contain),
+          child: SvgPicture.asset(
+            path,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );
@@ -773,19 +951,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Future<void> _updateProductCategories() async {
-    final ordersSnap = await FirebaseFirestore.instance
-        .collection('ORDERS')
-        .get();
+    final ordersSnap =
+    await FirebaseFirestore.instance.collection('ORDERS').get();
 
     final Map<String, int> salesCount = {};
+
     for (var order in ordersSnap.docs) {
       final data = order.data();
       final List items = data['Items'] ?? [];
+
       for (var item in items) {
         final String productName = item['Product_ID'] ?? '';
         final int qty = item['Quantity'] ?? 1;
+
         if (productName.isNotEmpty) {
           salesCount[productName] = (salesCount[productName] ?? 0) + qty;
         }
@@ -800,25 +979,27 @@ class _HomePageState extends State<HomePage> {
     final bestSellers = sorted.take(3).map((e) => e.key).toSet();
     final recommended = sorted.skip(3).take(3).map((e) => e.key).toSet();
 
-    final menuSnap = await FirebaseFirestore.instance
-        .collectionGroup('MENU')
-        .get();
+    final menuSnap =
+    await FirebaseFirestore.instance.collectionGroup('MENU').get();
 
     final batch = FirebaseFirestore.instance.batch();
+
     for (var product in menuSnap.docs) {
       final name = product.data()['name'] ?? '';
+
       String newCategory = '';
+
       if (bestSellers.contains(name)) {
         newCategory = 'best_seller';
       } else if (recommended.contains(name)) {
         newCategory = 'recommended';
       }
+
       batch.update(product.reference, {'category': newCategory});
     }
+
     await batch.commit();
   }
-
-
 
   static Widget _foodCard(String imagePath, String price) {
     return Container(
@@ -833,21 +1014,29 @@ class _HomePageState extends State<HomePage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.asset(imagePath,
-                width: 80, height: 110, fit: BoxFit.cover),
+            child: Image.asset(
+              imagePath,
+              width: 80,
+              height: 110,
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned(
             bottom: 35,
             left: 17,
             child: Container(
-              padding:
-              const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 5,
+                vertical: 3,
+              ),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(5),
               ),
-              child: Text(price,
-                  style: const TextStyle(color: Colors.white)),
+              child: Text(
+                price,
+                style: const TextStyle(color: Colors.white),
+              ),
             ),
           ),
         ],
@@ -855,30 +1044,33 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
-
   static Widget _recommendedCard(String imagePath, String price) {
     return Container(
       width: 160,
       height: 170,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      decoration:
-      BoxDecoration(borderRadius: BorderRadius.circular(20)),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+      ),
       child: Stack(
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
-            child: Image.asset(imagePath,
-                height: 170,
-                width: double.infinity,
-                fit: BoxFit.cover),
+            child: Image.asset(
+              imagePath,
+              height: 170,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
           ),
           Positioned(
             top: 10,
             right: 10,
             child: Container(
               padding: const EdgeInsets.symmetric(
-                  horizontal: 10, vertical: 5),
+                horizontal: 10,
+                vertical: 5,
+              ),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(12),

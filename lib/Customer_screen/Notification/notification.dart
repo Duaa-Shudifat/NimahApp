@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../4.Home Page/MyOrdersBar.dart';
-import '../Cart/DeliveryTime.dart';
 
 class NotificationsPanel extends StatefulWidget {
   const NotificationsPanel({super.key});
@@ -109,51 +108,75 @@ class _NotificationsPanelState extends State<NotificationsPanel> {
   }
   Widget buildItem(BuildContext context, Map<String, dynamic> data) {
     final title = data["title"] ?? "";
-    final docId = data["docId"]; // لازم يكون موجود عند StreamBuilder
+    final docId = data["docId"];
+    final type = data["type"] ?? "";
+    final orderId = data["orderId"] ?? "";
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Container(
-            height: 40,
-            width: 40,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                "assets/icons/dish.svg",
-                width: 22,
-                height: 22,
+    return InkWell(
+      onTap: () async {
+        if (type == "delivery" && orderId.toString().isNotEmpty) {
+          // ✅ حدّث الإشعار كمقروء
+          if (docId != null) {
+            await FirebaseFirestore.instance
+                .collection('USER_NOTIFICATIONS')
+                .doc(docId)
+                .update({'isRead': true});
+          }
+          // ✅ افتح صفحة الطلبات على تبويب Completed
+          if (context.mounted) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const ActiveOrdersEmptyScreen(initialTab: 1),
+              ),
+            );
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(15),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              height: 40,
+              width: 40,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  "assets/icons/dish.svg",
+                  width: 22,
+                  height: 22,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 15,
-                color: Colors.deepOrange,
-                fontWeight: FontWeight.w500,
+            const SizedBox(width: 15),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.deepOrange,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.close, color: Colors.grey),
-            onPressed: () async {
-              if (docId != null) {
-                // حذف الإشعار نهائيًا من Firestore
-                await FirebaseFirestore.instance
-                    .collection('USER_NOTIFICATIONS')
-                    .doc(docId)
-                    .delete();
-              }
-            },
-          ),
-        ],
+            IconButton(
+              icon: const Icon(Icons.close, color: Colors.grey),
+              onPressed: () async {
+                if (docId != null) {
+                  await FirebaseFirestore.instance
+                      .collection('USER_NOTIFICATIONS')
+                      .doc(docId)
+                      .delete();
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

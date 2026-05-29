@@ -22,7 +22,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController noteController = TextEditingController();
 
   @override
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF5CB58),
@@ -167,10 +166,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 Expanded(
                                   child: Text(
                                     selectedPayment != "Cash" &&
-                                        selectedPayment != "Tap to select payment"
+                                        selectedPayment !=
+                                            "Tap to select payment"
                                         ? selectedPayment
                                         : "Credit / Debit Card",
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Icon(
@@ -193,7 +194,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         // NOTE
                         _sectionTitle("📝 Note (Optional)"),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          padding:
+                          const EdgeInsets.symmetric(horizontal: 15),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(15),
@@ -283,24 +285,32 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
 
-    final List<Map<String, dynamic>> itemsList = items.map((item) => {
+    final List<Map<String, dynamic>> itemsList = items
+        .map((item) => {
       "Product_ID": item.title,
       "Quantity": item.qty,
-    }).toList();
+    })
+        .toList();
 
     try {
-      // ✅ جيب city الزبون
       final customerDoc = await FirebaseFirestore.instance
           .collection('CUSTOMERS')
           .doc(uid)
           .get();
-      final rawCity = customerDoc['selectedCity'] ?? customerDoc['city'] ?? '';
-// بعد (نفس التنظيف مثل الدرايفر)
-      final customerCity = rawCity.toString()
+
+      final customerData = customerDoc.data() as Map<String, dynamic>;
+
+      final customerLat = customerData['lat'] ?? customerData['latitude'];
+      final customerLng = customerData['lng'] ?? customerData['longitude'];
+
+      final rawCity = customerData['selectedCity'] ?? customerData['city'] ?? '';
+      final customerCity = rawCity
+          .toString()
           .replaceAll(', Jordan', '')
           .replaceAll(',Jordan', '')
           .trim();
-      print("ORDER CITY: '$customerCity'"); // ← هون بس
+
+      print("ORDER CITY: '$customerCity'");
 
       String providerName = CartData.currentRestaurant;
       String realProviderId = providerName;
@@ -315,27 +325,46 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         realProviderId = providerSnapshot.docs.first.id;
       }
 
+      final providerLocationDoc = await FirebaseFirestore.instance
+          .collection('FOOD_PROVIDERS')
+          .doc(realProviderId)
+          .get();
+
+      final providerData = providerLocationDoc.data() as Map<String, dynamic>;
+
+      final restaurantLat = providerData['lat'] ?? providerData['latitude'];
+      final restaurantLng = providerData['lng'] ?? providerData['longitude'];
+
       final orderData = {
         "Customer_ID": uid,
         "Driver_ID": "",
-        "City": customerCity, // ✅
+        "City": customerCity,
         "Items": itemsList,
         "Notes": noteController.text.trim(),
         "Order_Date": FieldValue.serverTimestamp(),
         "Provider_ID": realProviderId,
         "Provider_Name": providerName,
         "Provider_Image": CartData.currentRestaurantImage,
-        "Status": "Pending",  // ← هيك صح        "Total_Price": total,
+        "Status": "Pending",
+        "Total_Price": total,
         "Payment_Method": selectedPayment,
         "Address": selectedAddress,
+        "Customer_Lat": customerLat ?? 32.5568,
+        "Customer_Lng": customerLng ?? 35.8469,
+        "Restaurant_Lat": restaurantLat ?? 32.5550,
+        "Restaurant_Lng": restaurantLng ?? 35.8500,
+        // ✅ FIX 5: إضافة Driver_Lat و Driver_Lng مبدئياً كـ null
+        // سيتم تحديثهما لاحقاً من تطبيق السائق
+        "Driver_Lat": null,
+        "Driver_Lng": null,
       };
 
-      final orderRef = await FirebaseFirestore.instance.collection('ORDERS').add(orderData);
+      final orderRef = await FirebaseFirestore.instance
+          .collection('ORDERS')
+          .add(orderData);
       final String orderId = orderRef.id;
 
-
-
-// جيب fcmToken المطعم وابعتله إشعار
+      // إشعار المطعم
       final providerDoc = await FirebaseFirestore.instance
           .collection('FOOD_PROVIDERS')
           .doc(realProviderId)
@@ -358,10 +387,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'title': "New Order Received! 🍽️",
           'body': "You have a new order waiting for your approval.",
           'type': "order",
+          'isRead': false,
           'orderId': orderId,
           'createdAt': FieldValue.serverTimestamp(),
         });
       }
+
+      // تحديث الكميات في المنيو
       for (var item in items) {
         var mealQuery = await FirebaseFirestore.instance
             .collection('FOOD_PROVIDERS')
@@ -392,12 +424,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         MaterialPageRoute(builder: (_) => const ActiveOrdersEmptyScreen()),
             (route) => false,
       );
-
     } catch (e) {
       print("Error placing order: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text("An error occurred while placing the order. Please try again."),
+          content: Text(
+              "An error occurred while placing the order. Please try again."),
           backgroundColor: Colors.red,
         ),
       );
@@ -420,8 +452,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon,
-              color: isDefault ? Colors.grey : Colors.deepOrange),
+          Icon(icon, color: isDefault ? Colors.grey : Colors.deepOrange),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
