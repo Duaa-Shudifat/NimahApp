@@ -20,6 +20,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   String selectedAddress = "Tap to select address";
   String selectedPayment = "Tap to select payment";
   final TextEditingController noteController = TextEditingController();
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -53,8 +54,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-
-                        // ADDRESS
                         _sectionTitle("📍 Delivery Address"),
                         GestureDetector(
                           onTap: () async {
@@ -73,14 +72,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             text: selectedAddress,
                           ),
                         ),
-
                         const SizedBox(height: 20),
                         _sectionTitle("💳 Payment Method"),
-
                         GestureDetector(
-                          onTap: () {
-                            setState(() => selectedPayment = "Cash");
-                          },
+                          onTap: () => setState(() => selectedPayment = "Cash"),
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             margin: const EdgeInsets.only(bottom: 10),
@@ -104,10 +99,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         : Colors.grey),
                                 const SizedBox(width: 10),
                                 const Expanded(
-                                  child: Text(
-                                    "Cash",
-                                    style: TextStyle(fontWeight: FontWeight.bold),
-                                  ),
+                                  child: Text("Cash",
+                                      style: TextStyle(fontWeight: FontWeight.bold)),
                                 ),
                                 Icon(
                                   selectedPayment == "Cash"
@@ -121,7 +114,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                         ),
-
                         GestureDetector(
                           onTap: () async {
                             final result = await Navigator.push(
@@ -155,23 +147,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                             child: Row(
                               children: [
-                                Icon(
-                                  Icons.credit_card,
-                                  color: selectedPayment != "Cash" &&
-                                      selectedPayment != "Tap to select payment"
-                                      ? Colors.deepOrange
-                                      : Colors.grey,
-                                ),
+                                Icon(Icons.credit_card,
+                                    color: selectedPayment != "Cash" &&
+                                        selectedPayment != "Tap to select payment"
+                                        ? Colors.deepOrange
+                                        : Colors.grey),
                                 const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
                                     selectedPayment != "Cash" &&
-                                        selectedPayment !=
-                                            "Tap to select payment"
+                                        selectedPayment != "Tap to select payment"
                                         ? selectedPayment
                                         : "Credit / Debit Card",
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold),
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                                 Icon(
@@ -190,12 +178,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // NOTE
                         _sectionTitle("📝 Note (Optional)"),
                         Container(
-                          padding:
-                          const EdgeInsets.symmetric(horizontal: 15),
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade50,
                             borderRadius: BorderRadius.circular(15),
@@ -209,10 +194,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 30),
-
-                        // PLACE ORDER BUTTON
                         SizedBox(
                           width: double.infinity,
                           height: 55,
@@ -223,8 +205,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                             ),
-                            onPressed: _placeOrder,
-                            child: const Text(
+                            onPressed: _isLoading ? null : _placeOrder,
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
                               "Place Order",
                               style: TextStyle(
                                 color: Colors.white,
@@ -234,7 +218,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                             ),
                           ),
                         ),
-
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -243,13 +226,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ],
           ),
-
           Positioned(
             top: 40,
             left: 10,
             child: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.brown),
-              onPressed: () => Navigator.pop(context),
+              onPressed: _isLoading ? null : () => Navigator.pop(context),
             ),
           ),
         ],
@@ -257,104 +239,110 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ===== PLACE ORDER =====
   void _placeOrder() async {
     if (selectedAddress == "Tap to select address") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please select a delivery address ⚠️"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _showSnack("Please select a delivery address ⚠️", Colors.orange);
       return;
     }
-
     if (selectedPayment == "Tap to select payment") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please select a payment method ⚠️"),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      _showSnack("Please select a payment method ⚠️", Colors.orange);
+      return;
+    }
+    if (CartData.cartItems.isEmpty) {
+      _showSnack("Your cart is empty ⚠️", Colors.orange);
       return;
     }
 
-    final items = CartData.cartItems;
-    final total = items.fold(0.0, (sum, i) => sum + i.qty * i.price);
-
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-
-    final List<Map<String, dynamic>> itemsList = items
-        .map((item) => {
-      "Product_ID": item.title,
-      "Quantity": item.qty,
-    })
-        .toList();
+    setState(() => _isLoading = true);
 
     try {
+      final uid = FirebaseAuth.instance.currentUser?.uid;
+      if (uid == null) {
+        _showSnack("User not logged in ⚠️", Colors.red);
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      final items = CartData.cartItems;
+      final total = items.fold(0.0, (sum, i) => sum + i.qty * i.price);
+
       final customerDoc = await FirebaseFirestore.instance
           .collection('CUSTOMERS')
           .doc(uid)
           .get();
 
-      final customerData = customerDoc.data() as Map<String, dynamic>;
+      if (!customerDoc.exists) {
+        _showSnack("Customer data not found ⚠️", Colors.red);
+        setState(() => _isLoading = false);
+        return;
+      }
 
-      final customerLat = customerData['lat'] ?? customerData['latitude'];
-      final customerLng = customerData['lng'] ?? customerData['longitude'];
-
-      final rawCity = customerData['selectedCity'] ?? customerData['city'] ?? '';
-      final customerCity = rawCity
+      final customerData = customerDoc.data()!;
+      final customerLat =
+      (customerData['lat'] ?? customerData['latitude'] ?? 0.0).toDouble();
+      final customerLng =
+      (customerData['lng'] ?? customerData['longitude'] ?? 0.0).toDouble();
+      final rawCity =
+      (customerData['selectedCity'] ?? customerData['city'] ?? '')
           .toString()
           .replaceAll(', Jordan', '')
           .replaceAll(',Jordan', '')
           .trim();
 
-      print("ORDER CITY: '$customerCity'");
-
       String providerName = CartData.currentRestaurant;
-      String realProviderId = providerName;
+      String realProviderId = '';
+      double restaurantLat = 0.0;
+      double restaurantLng = 0.0;
+      String providerImage = CartData.currentRestaurantImage;
 
-      var providerSnapshot = await FirebaseFirestore.instance
+      final providerSnapshot = await FirebaseFirestore.instance
           .collection('FOOD_PROVIDERS')
           .where('name', isEqualTo: providerName)
           .limit(1)
           .get();
 
       if (providerSnapshot.docs.isNotEmpty) {
-        realProviderId = providerSnapshot.docs.first.id;
+        final providerDoc = providerSnapshot.docs.first;
+        realProviderId = providerDoc.id;
+        final providerData = providerDoc.data();
+        restaurantLat =
+            (providerData['lat'] ?? providerData['latitude'] ?? 0.0).toDouble();
+        restaurantLng =
+            (providerData['lng'] ?? providerData['longitude'] ?? 0.0).toDouble();
+        if (providerImage.isEmpty) {
+          providerImage = providerData['logoUrl'] ?? '';
+        }
+      } else {
+        _showSnack("Restaurant not found. Please try again ⚠️", Colors.red);
+        setState(() => _isLoading = false);
+        return;
       }
 
-      final providerLocationDoc = await FirebaseFirestore.instance
-          .collection('FOOD_PROVIDERS')
-          .doc(realProviderId)
-          .get();
-
-      final providerData = providerLocationDoc.data() as Map<String, dynamic>;
-
-      final restaurantLat = providerData['lat'] ?? providerData['latitude'];
-      final restaurantLng = providerData['lng'] ?? providerData['longitude'];
+      final List<Map<String, dynamic>> itemsList = items
+          .map((item) => {
+        "Product_ID": item.title,
+        "Quantity": item.qty,
+      })
+          .toList();
 
       final orderData = {
         "Customer_ID": uid,
         "Driver_ID": "",
-        "City": customerCity,
+        "City": rawCity,
         "Items": itemsList,
         "Notes": noteController.text.trim(),
         "Order_Date": FieldValue.serverTimestamp(),
         "Provider_ID": realProviderId,
         "Provider_Name": providerName,
-        "Provider_Image": CartData.currentRestaurantImage,
+        "Provider_Image": providerImage,
         "Status": "Pending",
         "Total_Price": total,
         "Payment_Method": selectedPayment,
         "Address": selectedAddress,
-        "Customer_Lat": customerLat ?? 32.5568,
-        "Customer_Lng": customerLng ?? 35.8469,
-        "Restaurant_Lat": restaurantLat ?? 32.5550,
-        "Restaurant_Lng": restaurantLng ?? 35.8500,
-        // ✅ FIX 5: إضافة Driver_Lat و Driver_Lng مبدئياً كـ null
-        // سيتم تحديثهما لاحقاً من تطبيق السائق
+        "Customer_Lat": customerLat,
+        "Customer_Lng": customerLng,
+        "Restaurant_Lat": restaurantLat,
+        "Restaurant_Lng": restaurantLng,
         "Driver_Lat": null,
         "Driver_Lng": null,
       };
@@ -364,25 +352,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           .add(orderData);
       final String orderId = orderRef.id;
 
-      // إشعار المطعم
-      final providerDoc = await FirebaseFirestore.instance
-          .collection('FOOD_PROVIDERS')
-          .doc(realProviderId)
-          .get();
+      try {
+        final providerDocFull = await FirebaseFirestore.instance
+            .collection('FOOD_PROVIDERS')
+            .doc(realProviderId)
+            .get();
 
-      final String? providerToken = providerDoc['fcmToken'];
+        final String? providerToken = providerDocFull.data()?['fcmToken'];
+        if (providerToken != null && providerToken.isNotEmpty) {
+          await NotificationService.sendNotification(
+            fcmToken: providerToken,
+            title: "New Order Received! 🍽️",
+            body: "You have a new order waiting for your approval.",
+            orderId: orderId,
+            type: "order",
+          );
+        }
 
-      if (providerToken != null) {
-        await NotificationService.sendNotification(
-          fcmToken: providerToken,
-          title: "New Order Received! 🍽️",
-          body: "You have a new order waiting for your approval.",
-          orderId: orderId,
-          type: "order",
-        );
-        await FirebaseFirestore.instance
-            .collection('USER_NOTIFICATIONS')
-            .add({
+        await FirebaseFirestore.instance.collection('USER_NOTIFICATIONS').add({
           'userId': realProviderId,
           'title': "New Order Received! 🍽️",
           'body': "You have a new order waiting for your approval.",
@@ -391,33 +378,50 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           'orderId': orderId,
           'createdAt': FieldValue.serverTimestamp(),
         });
+      } catch (notifError) {
+        debugPrint("Notification error (non-critical): $notifError");
       }
 
-      // تحديث الكميات في المنيو
       for (var item in items) {
-        var mealQuery = await FirebaseFirestore.instance
-            .collection('FOOD_PROVIDERS')
-            .doc(realProviderId)
-            .collection('MENU')
-            .where('name', isEqualTo: item.title)
-            .limit(1)
-            .get();
+        try {
+          final productQuery = await FirebaseFirestore.instance
+              .collection('PRODUCT')
+              .where('Name', isEqualTo: item.title)
+              .where('Provider_ID', isEqualTo: realProviderId)
+              .limit(1)
+              .get();
 
-        if (mealQuery.docs.isNotEmpty) {
-          String mealDocId = mealQuery.docs.first.id;
-          await FirebaseFirestore.instance
+          if (productQuery.docs.isNotEmpty) {
+            final doc = productQuery.docs.first;
+            final currentQty = (doc.data()['qty'] ?? 0) as int;
+            final newQty = (currentQty - item.qty).clamp(0, 999999);
+            await doc.reference.update({'qty': newQty});
+          }
+
+          final menuQuery = await FirebaseFirestore.instance
               .collection('FOOD_PROVIDERS')
               .doc(realProviderId)
               .collection('MENU')
-              .doc(mealDocId)
-              .update({
-            'available': FieldValue.increment(-item.qty),
-          });
+              .where('name', isEqualTo: item.title)
+              .limit(1)
+              .get();
+
+          if (menuQuery.docs.isNotEmpty) {
+            final menuDoc = menuQuery.docs.first;
+            final currentAvailable = (menuDoc.data()['available'] ?? 0) as int;
+            final newAvailable = (currentAvailable - item.qty).clamp(0, 999999);
+            await menuDoc.reference.update({'available': newAvailable});
+          }
+        } catch (e) {
+          debugPrint("qty update error for ${item.title}: $e");
         }
       }
 
       CartData.cartItems.clear();
       CartData.currentRestaurant = "";
+      CartData.currentRestaurantImage = "";
+
+      if (!mounted) return;
 
       Navigator.pushAndRemoveUntil(
         context,
@@ -425,21 +429,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             (route) => false,
       );
     } catch (e) {
-      print("Error placing order: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-              "An error occurred while placing the order. Please try again."),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint("Error placing order: $e");
+      _showSnack(
+          "An error occurred while placing the order. Please try again.",
+          Colors.red);
+      setState(() => _isLoading = false);
     }
   }
 
-  // ===== SELECTION CARD =====
+  void _showSnack(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: color),
+    );
+  }
+
   Widget _selectionCard({required IconData icon, required String text}) {
-    final bool isDefault = text == "Tap to select address" ||
-        text == "Tap to select payment";
+    final bool isDefault =
+        text == "Tap to select address" || text == "Tap to select payment";
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -469,15 +475,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ===== HELPERS =====
   Widget _sectionTitle(String text) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: Text(text,
-          style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-              color: Colors.brown)),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 15,
+          color: Colors.brown,
+        ),
+      ),
     );
   }
 }

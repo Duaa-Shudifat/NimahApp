@@ -20,7 +20,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         children: [
           const SizedBox(height: 60),
 
-          // TITLE
           const Text(
             "Payment Method",
             style: TextStyle(
@@ -45,7 +44,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
               child: Column(
                 children: [
 
-                  // CASH CARD
                   _paymentCard(
                     icon: Icons.money,
                     title: "Cash",
@@ -55,7 +53,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
                   const SizedBox(height: 15),
 
-                  // CARD PAYMENT
                   _paymentCard(
                     icon: Icons.credit_card,
                     title: "Credit / Debit Card",
@@ -63,7 +60,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
                     value: "Card",
                   ),
 
-                  // لو اختار Card، يظهر فورم
                   if (selectedMethod == "Card") ...[
                     const SizedBox(height: 20),
                     _cardForm(),
@@ -71,7 +67,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
 
                   const Spacer(),
 
-                  // CONFIRM BUTTON
                   SizedBox(
                     width: double.infinity,
                     height: 50,
@@ -114,7 +109,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  // ===== PAYMENT CARD WIDGET =====
   Widget _paymentCard({
     required IconData icon,
     required String title,
@@ -189,7 +183,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  // ===== CARD FORM =====
   Widget _cardForm() {
     return Column(
       children: [

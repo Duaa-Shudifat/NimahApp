@@ -29,7 +29,6 @@ class OnboardingTemplate extends StatelessWidget {
       body: Stack(
         children: [
 
-          // 🔥 TOP IMAGE
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.72,
             width: double.infinity,
@@ -39,7 +38,6 @@ class OnboardingTemplate extends StatelessWidget {
             ),
           ),
 
-          // 🔙 BACK BUTTON
           Positioned(
             top: 40,
             left: 15,
@@ -57,7 +55,6 @@ class OnboardingTemplate extends StatelessWidget {
             ),
           ),
 
-          // 🟡 BOTTOM BOX
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(

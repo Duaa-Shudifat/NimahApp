@@ -8,6 +8,8 @@ import 'MyOrdersBar.dart';
 import 'FavoriteBar.dart';
 import '../Cart/CartPanel.dart';
 import '../../language/app_strings.dart';
+import 'RestaurantMeals.dart';
+import 'RestaurantMenue.dart';
 import 'SettingsBar.dart';
 import 'Restaurants.dart';
 import 'BottomNavBar.dart';
@@ -26,7 +28,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserCity();
-    _updateProductCategories();
   }
 
   Future<void> _loadUserCity() async {
@@ -190,10 +191,8 @@ class _HomePageState extends State<HomePage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       final newAddr = _addrController.text.trim();
-
                       if (newAddr.isNotEmpty) {
                         setState(() => _deliveryAddress = newAddr);
-
                         final user = FirebaseAuth.instance.currentUser;
                         if (user != null) {
                           await FirebaseFirestore.instance
@@ -202,7 +201,6 @@ class _HomePageState extends State<HomePage> {
                               .update({'selectedCity': newAddr});
                         }
                       }
-
                       Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -229,6 +227,7 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
   Widget _notificationBell() {
     final user = FirebaseAuth.instance.currentUser;
 
@@ -267,11 +266,9 @@ class _HomePageState extends State<HomePage> {
           .snapshots(),
       builder: (context, snapshot) {
         bool hasUnread = false;
-
         if (snapshot.hasData) {
           for (final doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
-
             if (data['isRead'] != true) {
               hasUnread = true;
               break;
@@ -318,10 +315,7 @@ class _HomePageState extends State<HomePage> {
                       decoration: BoxDecoration(
                         color: Colors.red,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
+                        border: Border.all(color: Colors.white, width: 2),
                       ),
                     ),
                   ),
@@ -345,19 +339,15 @@ class _HomePageState extends State<HomePage> {
     if (snap.docs.isEmpty) return;
 
     final batch = FirebaseFirestore.instance.batch();
-
     for (final doc in snap.docs) {
       final data = doc.data();
-
       if (data['isRead'] != true) {
-        batch.update(doc.reference, {
-          'isRead': true,
-        });
+        batch.update(doc.reference, {'isRead': true});
       }
     }
-
     await batch.commit();
   }
+
   void _openNotificationsPanel() {
     showGeneralDialog(
       context: context,
@@ -367,7 +357,6 @@ class _HomePageState extends State<HomePage> {
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, _, __) {
         final isArabic = AppStrings.isArabic;
-
         return Align(
           alignment: isArabic ? Alignment.centerLeft : Alignment.centerRight,
           child: Material(
@@ -382,7 +371,6 @@ class _HomePageState extends State<HomePage> {
       },
       transitionBuilder: (context, animation, _, child) {
         final isArabic = AppStrings.isArabic;
-
         return SlideTransition(
           position: Tween<Offset>(
             begin: isArabic ? const Offset(-1, 0) : const Offset(1, 0),
@@ -397,7 +385,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: AppStrings.isArabic ? TextDirection.rtl : TextDirection.ltr,
+      textDirection:
+      AppStrings.isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: const Color(0xFFF5CB58),
         body: Column(
@@ -423,7 +412,8 @@ class _HomePageState extends State<HomePage> {
                           child: Container(
                             height: 46,
                             margin: const EdgeInsets.only(top: 10),
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            padding:
+                            const EdgeInsets.symmetric(horizontal: 14),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(23),
@@ -473,7 +463,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                       const SizedBox(width: 10),
-
                       circleSvgIcon1(
                         context,
                         'assets/icons/cart.svg',
@@ -487,7 +476,6 @@ class _HomePageState extends State<HomePage> {
                             const Duration(milliseconds: 300),
                             pageBuilder: (context, _, __) {
                               final isArabic = AppStrings.isArabic;
-
                               return Align(
                                 alignment: isArabic
                                     ? Alignment.centerLeft
@@ -495,18 +483,17 @@ class _HomePageState extends State<HomePage> {
                                 child: Material(
                                   color: Colors.transparent,
                                   child: SizedBox(
-                                    width:
-                                    MediaQuery.of(context).size.width * 0.80,
-                                    height: MediaQuery.of(context).size.height,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.80,
+                                    height:
+                                    MediaQuery.of(context).size.height,
                                     child: const CartPanel(),
                                   ),
                                 ),
                               );
                             },
-                            transitionBuilder:
-                                (context, animation, _, child) {
+                            transitionBuilder: (context, animation, _, child) {
                               final isArabic = AppStrings.isArabic;
-
                               return SlideTransition(
                                 position: Tween<Offset>(
                                   begin: isArabic
@@ -520,9 +507,7 @@ class _HomePageState extends State<HomePage> {
                           );
                         },
                       ),
-
                       _notificationBell(),
-
                       circleSvgIcon1(
                         context,
                         'assets/icons/profile.svg',
@@ -536,7 +521,6 @@ class _HomePageState extends State<HomePage> {
                             const Duration(milliseconds: 300),
                             pageBuilder: (context, _, __) {
                               final isArabic = AppStrings.isArabic;
-
                               return Align(
                                 alignment: isArabic
                                     ? Alignment.centerLeft
@@ -544,18 +528,17 @@ class _HomePageState extends State<HomePage> {
                                 child: Material(
                                   color: Colors.transparent,
                                   child: SizedBox(
-                                    width:
-                                    MediaQuery.of(context).size.width * 0.80,
-                                    height: MediaQuery.of(context).size.height,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.80,
+                                    height:
+                                    MediaQuery.of(context).size.height,
                                     child: const ProfileScreen(),
                                   ),
                                 ),
                               );
                             },
-                            transitionBuilder:
-                                (context, animation, _, child) {
+                            transitionBuilder: (context, animation, _, child) {
                               final isArabic = AppStrings.isArabic;
-
                               return SlideTransition(
                                 position: Tween<Offset>(
                                   begin: isArabic
@@ -587,7 +570,6 @@ class _HomePageState extends State<HomePage> {
                 ],
               ),
             ),
-
             Expanded(
               child: Container(
                 decoration: const BoxDecoration(
@@ -679,13 +661,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildBestSeller() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collectionGroup('MENU')
-          .where('category', isEqualTo: 'best_seller')
-          .snapshots(),
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchTopSellingMeals(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 150,
+            child: Center(
+              child: CircularProgressIndicator(color: Colors.deepOrange),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return SizedBox(
             height: 150,
             child: ListView(
@@ -700,19 +688,37 @@ class _HomePageState extends State<HomePage> {
           );
         }
 
-        final docs = snapshot.data!.docs;
-
+        final meals = snapshot.data!;
         return SizedBox(
           height: 150,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: docs.length,
+            itemCount: meals.length,
             itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
-
-              return _productCard(
-                data['imageUrl'] ?? '',
-                'JD${data['price']}',
+              final meal = meals[index];
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MealDetailsScreen(
+                        meal: {
+                          "name": meal["name"]?.toString() ?? "",
+                          "price": meal["price"]?.toString() ?? "0",
+                          "image": meal["imageUrl"]?.toString() ?? "",
+                          "qty": meal["qty"]?.toString() ?? "0",
+                          "desc": meal["desc"]?.toString() ?? "",
+                          "restaurantName":
+                          meal["restaurantName"]?.toString() ?? "",
+                        },
+                      ),
+                    ),
+                  );
+                },
+                child: _productCard(
+                  meal["imageUrl"]?.toString() ?? "",
+                  "JD${meal["price"]}",
+                ),
               );
             },
           ),
@@ -721,40 +727,153 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future<List<Map<String, dynamic>>> _fetchTopSellingMeals() async {
+    final city = _deliveryAddress.split(',').first.trim();
+
+    final providersSnap = await FirebaseFirestore.instance
+        .collection('FOOD_PROVIDERS')
+        .where('city', isEqualTo: city)
+        .where('VerificationStatus', isEqualTo: 'accepted')
+        .get();
+
+    if (providersSnap.docs.isEmpty) return [];
+
+    final providerIds = providersSnap.docs.map((d) => d.id).toSet();
+
+    final ordersSnap =
+    await FirebaseFirestore.instance.collection('ORDERS').get();
+
+    final Map<String, int> salesCount = {};
+    for (var order in ordersSnap.docs) {
+      final data = order.data();
+      final providerId = data['Provider_ID']?.toString() ?? '';
+      if (!providerIds.contains(providerId)) continue;
+
+      final items = (data['Items'] ?? []) as List;
+      for (var item in items) {
+        final name = item['Product_ID']?.toString() ?? '';
+        final qty = (item['Quantity'] ?? 1) as int;
+        if (name.isNotEmpty) {
+          salesCount[name] = (salesCount[name] ?? 0) + qty;
+        }
+      }
+    }
+
+    if (salesCount.isEmpty) return [];
+
+    final sorted = salesCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topNames = sorted.take(10).map((e) => e.key).toList();
+
+    final List<Map<String, dynamic>> result = [];
+
+    for (final name in topNames) {
+      try {
+        final productQuery = await FirebaseFirestore.instance
+            .collection('PRODUCT')
+            .where('Name', isEqualTo: name)
+            .where('Provider_ID', whereIn: providerIds.toList())
+            .limit(1)
+            .get();
+
+        if (productQuery.docs.isNotEmpty) {
+          final data = Map<String, dynamic>.from(
+              productQuery.docs.first.data() as Map);
+
+          result.add({
+            'name': data['Name'] ?? '',
+            'price': data['Price'] ?? 0,
+            'imageUrl': data['image'] ?? '',
+            'qty': data['qty'] ?? 0,
+            'desc': data['Description'] ?? '',
+            'restaurantName': _getProviderName(
+                providersSnap.docs, data['Provider_ID'] ?? ''),
+            'restaurantUid': data['Provider_ID'] ?? '',
+          });
+        }
+      } catch (e) {
+        debugPrint("fetchTopMeals error for $name: $e");
+      }
+    }
+
+    return result;
+  }
+
+  String _getProviderName(
+      List<QueryDocumentSnapshot> providers, String providerId) {
+    try {
+      return providers
+          .firstWhere((d) => d.id == providerId)
+          .data()
+          .toString()
+          .contains('name')
+          ? (providers.firstWhere((d) => d.id == providerId).data()
+      as Map<String, dynamic>)['name'] ??
+          ''
+          : '';
+    } catch (_) {
+      return '';
+    }
+  }
+// ════════════════════════════════════════
+  // RECOMMENDED — مطاعم مرتبة حسب المبيعات
+  // ════════════════════════════════════════
   Widget _buildRecommended() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance
-          .collectionGroup('MENU')
-          .where('category', isEqualTo: 'recommended')
-          .snapshots(),
+    final city = _deliveryAddress.split(',').first.trim();
+
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: _fetchTopProviders(city),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 170,
+            child: Center(
+              child: CircularProgressIndicator(color: Colors.deepOrange),
+            ),
+          );
+        }
+
+        if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return SizedBox(
             height: 170,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _recommendedCard('assets/images/food_rec1.png', 'JD12'),
-                _recommendedCard('assets/images/food_rec2.png', 'JD18'),
-                _recommendedCard('assets/images/food_rec3.png', 'JD18'),
+                _recommendedCard('assets/images/food_rec1.png', 'Restaurant'),
+                _recommendedCard('assets/images/food_rec2.png', 'Restaurant'),
+                _recommendedCard('assets/images/food_rec3.png', 'Restaurant'),
               ],
             ),
           );
         }
 
-        final docs = snapshot.data!.docs;
+        final providers = snapshot.data!;
 
         return SizedBox(
           height: 170,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: docs.length,
+            itemCount: providers.length,
             itemBuilder: (context, index) {
-              final data = docs[index].data() as Map<String, dynamic>;
+              final p = providers[index];
+              final name = p['name']?.toString() ?? 'Restaurant';
+              final image = p['logoUrl']?.toString() ?? '';
+              final uid = p['uid']?.toString() ?? '';
 
-              return _recommendedCardNetwork(
-                data['imageUrl'] ?? '',
-                'JD${data['price']}',
+              return GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RestaurantMenuScreen(
+                        restaurantName: name,
+                        providerUid: uid,
+                        restaurantImage: image,
+                      ),
+                    ),
+                  );
+                },
+                child: _recommendedCardNetwork(image, name),
               );
             },
           ),
@@ -762,6 +881,69 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
+  Future<List<Map<String, dynamic>>> _fetchTopProviders(String city) async {
+    // 1. جيب كل مطاعم المدينة المقبولة
+    final providersSnap = await FirebaseFirestore.instance
+        .collection('FOOD_PROVIDERS')
+        .where('city', isEqualTo: city)
+        .where('VerificationStatus', isEqualTo: 'accepted')
+        .get();
+
+    if (providersSnap.docs.isEmpty) return [];
+
+    // فلتر: بس اللي عندهم صورة
+    final providers = providersSnap.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return (data['logoUrl']?.toString() ?? '').isNotEmpty;
+    }).toList();
+
+    if (providers.isEmpty) return [];
+
+    final providerIds = providers.map((d) => d.id).toSet();
+
+    // 2. احسب مجموع المبيعات لكل مطعم من ORDERS
+    final ordersSnap = await FirebaseFirestore.instance
+        .collection('ORDERS')
+        .get();
+
+    final Map<String, int> salesPerProvider = {};
+
+    for (var order in ordersSnap.docs) {
+      final data = order.data();
+      final providerId = data['Provider_ID']?.toString() ?? '';
+      if (!providerIds.contains(providerId)) continue;
+
+      final items = (data['Items'] ?? []) as List;
+      int totalQty = 0;
+      for (var item in items) {
+        totalQty += (item['Quantity'] ?? 1) as int;
+      }
+      salesPerProvider[providerId] =
+          (salesPerProvider[providerId] ?? 0) + totalQty;
+    }
+
+    // 3. رتّب المطاعم من الأكثر مبيعاً للأقل
+    providers.sort((a, b) {
+      final salesA = salesPerProvider[a.id] ?? 0;
+      final salesB = salesPerProvider[b.id] ?? 0;
+      return salesB.compareTo(salesA);
+    });
+
+    // 4. رجّع أعلى 10
+    return providers.take(10).map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      return {
+        'uid': doc.id,
+        'name': data['name'] ?? '',
+        'logoUrl': data['logoUrl'] ?? '',
+        'sales': salesPerProvider[doc.id] ?? 0,
+      };
+    }).toList();
+  }
+  // ════════════════════════════════════════
+  // WIDGETS
+  // ════════════════════════════════════════
 
   Widget _productCard(String imageUrl, String price) {
     return Container(
@@ -789,20 +971,14 @@ class _HomePageState extends State<HomePage> {
             bottom: 20,
             left: 10,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 3,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 price,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                ),
+                style: const TextStyle(color: Colors.white, fontSize: 11),
               ),
             ),
           ),
@@ -811,7 +987,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _recommendedCardNetwork(String imageUrl, String price) {
+  /// كارد المطعم في Recommended — يعرض صورة المطعم + اسمه
+  Widget _recommendedCardNetwork(String imageUrl, String restaurantName) {
     return Container(
       width: 160,
       height: 170,
@@ -821,6 +998,7 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Stack(
         children: [
+          // صورة المطعم
           ClipRRect(
             borderRadius: BorderRadius.circular(20),
             child: Image.network(
@@ -828,30 +1006,51 @@ class _HomePageState extends State<HomePage> {
               height: 170,
               width: double.infinity,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) =>
-              const Icon(Icons.image_not_supported),
+              errorBuilder: (_, __, ___) => Container(
+                color: Colors.orange.shade100,
+                child:
+                const Icon(Icons.store, size: 60, color: Colors.deepOrange),
+              ),
             ),
           ),
+          // تدرج داكن في الأسفل
           Positioned(
-            top: 10,
-            right: 10,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 5,
-              ),
+              height: 60,
               decoration: BoxDecoration(
-                color: Colors.deepOrange,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                price,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.7),
+                    Colors.transparent,
+                  ],
                 ),
               ),
+            ),
+          ),
+          // اسم المطعم
+          Positioned(
+            bottom: 10,
+            left: 10,
+            right: 10,
+            child: Text(
+              restaurantName,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -877,10 +1076,7 @@ class _HomePageState extends State<HomePage> {
         child: SizedBox(
           width: 22,
           height: 22,
-          child: SvgPicture.asset(
-            path,
-            fit: BoxFit.contain,
-          ),
+          child: SvgPicture.asset(path, fit: BoxFit.contain),
         ),
       ),
     );
@@ -899,10 +1095,7 @@ class _HomePageState extends State<HomePage> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => CategoryScreen(
-              title: title,
-              city: city,
-            ),
+            builder: (context) => CategoryScreen(title: title, city: city),
           ),
         );
       },
@@ -913,10 +1106,7 @@ class _HomePageState extends State<HomePage> {
             Container(
               width: size,
               height: size,
-              decoration: BoxDecoration(
-                color: bgColor,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
               child: Center(
                 child: SvgPicture.asset(
                   path,
@@ -951,56 +1141,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Future<void> _updateProductCategories() async {
-    final ordersSnap =
-    await FirebaseFirestore.instance.collection('ORDERS').get();
-
-    final Map<String, int> salesCount = {};
-
-    for (var order in ordersSnap.docs) {
-      final data = order.data();
-      final List items = data['Items'] ?? [];
-
-      for (var item in items) {
-        final String productName = item['Product_ID'] ?? '';
-        final int qty = item['Quantity'] ?? 1;
-
-        if (productName.isNotEmpty) {
-          salesCount[productName] = (salesCount[productName] ?? 0) + qty;
-        }
-      }
-    }
-
-    if (salesCount.isEmpty) return;
-
-    final sorted = salesCount.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-
-    final bestSellers = sorted.take(3).map((e) => e.key).toSet();
-    final recommended = sorted.skip(3).take(3).map((e) => e.key).toSet();
-
-    final menuSnap =
-    await FirebaseFirestore.instance.collectionGroup('MENU').get();
-
-    final batch = FirebaseFirestore.instance.batch();
-
-    for (var product in menuSnap.docs) {
-      final name = product.data()['name'] ?? '';
-
-      String newCategory = '';
-
-      if (bestSellers.contains(name)) {
-        newCategory = 'best_seller';
-      } else if (recommended.contains(name)) {
-        newCategory = 'recommended';
-      }
-
-      batch.update(product.reference, {'category': newCategory});
-    }
-
-    await batch.commit();
-  }
-
   static Widget _foodCard(String imagePath, String price) {
     return Container(
       width: 100,
@@ -1025,10 +1165,7 @@ class _HomePageState extends State<HomePage> {
             bottom: 35,
             left: 17,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 5,
-                vertical: 3,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.deepOrange,
                 borderRadius: BorderRadius.circular(5),
@@ -1044,14 +1181,12 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  static Widget _recommendedCard(String imagePath, String price) {
+  static Widget _recommendedCard(String imagePath, String label) {
     return Container(
       width: 160,
       height: 170,
       margin: const EdgeInsets.symmetric(horizontal: 6),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
       child: Stack(
         children: [
           ClipRRect(
@@ -1064,25 +1199,37 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
-            top: 10,
-            right: 10,
+            bottom: 0,
+            left: 0,
+            right: 0,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 5,
-              ),
+              height: 60,
               decoration: BoxDecoration(
-                color: Colors.deepOrange,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                price,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(20),
+                  bottomRight: Radius.circular(20),
+                ),
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black54, Colors.transparent],
                 ),
               ),
+            ),
+          ),
+          Positioned(
+            bottom: 10,
+            left: 10,
+            right: 10,
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],

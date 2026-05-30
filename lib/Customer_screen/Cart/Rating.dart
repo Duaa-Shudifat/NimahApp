@@ -16,7 +16,6 @@ class _RatingScreenState extends State<RatingScreen> {
   bool _isSubmitting = false;
   final TextEditingController noteController = TextEditingController();
 
-  // ⭐ STAR WIDGET
   Widget buildStar(int index) {
     return IconButton(
       onPressed: () {
@@ -32,7 +31,6 @@ class _RatingScreenState extends State<RatingScreen> {
     );
   }
 
-  // ❌ ERROR DIALOG
   void showErrorDialog() {
     showDialog(
       context: context,
@@ -70,7 +68,6 @@ class _RatingScreenState extends State<RatingScreen> {
     );
   }
 
-  // ✅ حفظ التقييم في Firestore
   Future<void> _submitRating() async {
     setState(() => _isSubmitting = true);
 
@@ -98,7 +95,6 @@ class _RatingScreenState extends State<RatingScreen> {
     setState(() => _isSubmitting = false);
   }
 
-  // ✅ THANK YOU DIALOG
   void _showThankYouDialog() {
     showDialog(
       context: context,
@@ -199,7 +195,6 @@ class _RatingScreenState extends State<RatingScreen> {
                       ),
                       const SizedBox(height: 25),
 
-                      // ⭐ STARS
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(5, (index) => buildStar(index + 1)),
@@ -207,7 +202,6 @@ class _RatingScreenState extends State<RatingScreen> {
 
                       const SizedBox(height: 30),
 
-                      // 📝 NOTE
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 15),
                         decoration: BoxDecoration(
@@ -226,7 +220,6 @@ class _RatingScreenState extends State<RatingScreen> {
 
                       const SizedBox(height: 30),
 
-                      // ✅ BUTTON
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(

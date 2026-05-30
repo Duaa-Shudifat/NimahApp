@@ -237,7 +237,11 @@ class _DriverPageState extends State<DriverPage> {
                       await FirebaseFirestore.instance
                           .collection('DRIVERS')
                           .doc(docId)
-                          .update({'VerificationStatus': 'accepted'});
+                          .update({
+                        'VerificationStatus': 'accepted',
+                        'hasSeenAcceptedScreen': false,
+                        'rejectionReason': null,
+                      });
                     },
                   ),
 
@@ -268,8 +272,8 @@ class _DriverPageState extends State<DriverPage> {
                                     .doc(docId)
                                     .update({
                                   'VerificationStatus': 'rejected',
-                                  'rejectionReason':
-                                  reasonController.text.trim(),
+                                  'rejectionReason': reasonController.text.trim(),
+                                  'hasSeenAcceptedScreen': false,
                                 });
                                 Navigator.pop(ctx);
                               },

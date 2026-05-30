@@ -35,14 +35,14 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
 
     if (email.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter your email")),
+        SnackBar(content: Text(AppStrings.emailEmptyError)),
       );
       return;
     }
 
     if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid email format")),
+        SnackBar(content: Text(AppStrings.invalidEmailError)),
       );
       return;
     }
@@ -84,14 +84,14 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Failed to send OTP, try again")),
+          SnackBar(content: Text(AppStrings.otpSendFailed)),
         );
       }
     } catch (e) {
       debugPrint('Send OTP error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Something went wrong, try again")),
+          SnackBar(content: Text(AppStrings.generalError)),
         );
       }
     } finally {
@@ -135,10 +135,10 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                     child: Column(
                       children: [
                         const SizedBox(height: 40),
-                        const Text(
-                          "Enter your email address",
+                        Text(
+                          AppStrings.enterEmailHint,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.deepOrangeAccent,
@@ -156,12 +156,12 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
                           child: TextField(
                             controller: emailController,
                             keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               border: InputBorder.none,
-                              hintText: "example@email.com",
-                              hintStyle: TextStyle(
+                              hintText: AppStrings.enterEmailHint,
+                              hintStyle: const TextStyle(
                                   color: Colors.brown, fontSize: 14),
-                              prefixIcon: Icon(Icons.email_outlined,
+                              prefixIcon: const Icon(Icons.email_outlined,
                                   color: Colors.brown),
                             ),
                           ),
@@ -204,7 +204,6 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> {
   }
 }
 
-// ─── صفحة إدخال OTP ───────────────────────────────────────────────
 class ResetPasswordOTPScreen extends StatefulWidget {
   final String email;
   final String correctOTP;
@@ -237,7 +236,7 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
   void _verify() {
     if (_enteredOTP.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter the full code")),
+        SnackBar(content: Text(AppStrings.enterFullCodeError)),
       );
       return;
     }
@@ -250,7 +249,7 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Wrong OTP ❌")),
+        SnackBar(content: Text(AppStrings.wrongOTP)),
       );
     }
   }
@@ -258,16 +257,16 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      resizeToAvoidBottomInset: true, // ✅
+      resizeToAvoidBottomInset: true,
       backgroundColor: const Color(0xFFF5CB58),
       body: Stack(
         children: [
           Column(
             children: [
               const SizedBox(height: 70),
-              const Text(
-                "Verify Email",
-                style: TextStyle(
+              Text(
+                AppStrings.verifyEmailTitle,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.brown,
@@ -285,7 +284,7 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
                       topRight: Radius.circular(40),
                     ),
                   ),
-                  child: SingleChildScrollView( // ✅
+                  child: SingleChildScrollView(
                     child: Column(
                       children: [
                         const SizedBox(height: 30),
@@ -303,9 +302,9 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          "Check your email",
-                          style: TextStyle(
+                        Text(
+                          AppStrings.checkEmail,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.deepOrangeAccent,
@@ -313,7 +312,7 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "We sent a 6-digit code to\n${widget.email}",
+                          AppStrings.sentCodeMessage(widget.email),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                               fontSize: 14, color: Colors.brown),
@@ -372,9 +371,9 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
-                            child: const Text(
-                              "Verify",
-                              style: TextStyle(
+                            child: Text(
+                              AppStrings.verifyBtn,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -386,7 +385,8 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
                     ),
                   ),
                 ),
-              )],
+              ),
+            ],
           ),
           Positioned(
             top: 40,
@@ -402,7 +402,6 @@ class _ResetPasswordOTPScreenState extends State<ResetPasswordOTPScreen> {
   }
 }
 
-// ─── صفحة تأكيد إرسال الرابط ─────────────────────────────────────
 class ResetLinkSentScreen extends StatefulWidget {
   final String email;
 
@@ -428,8 +427,8 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
           .sendPasswordResetEmail(email: widget.email);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Reset link sent ✅"),
+          SnackBar(
+            content: Text(AppStrings.resetLinkSent),
             backgroundColor: Colors.green,
           ),
         );
@@ -438,7 +437,7 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
       debugPrint('Reset link error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Something went wrong, try again")),
+          SnackBar(content: Text(AppStrings.generalError)),
         );
       }
     } finally {
@@ -453,9 +452,9 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
       body: Column(
         children: [
           const SizedBox(height: 70),
-          const Text(
-            "Reset Password",
-            style: TextStyle(
+          Text(
+            AppStrings.resetPasswordTitle,
+            style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
               color: Colors.brown,
@@ -490,9 +489,9 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  const Text(
-                    "Check Your Email 📧",
-                    style: TextStyle(
+                  Text(
+                    AppStrings.checkEmail,
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.deepOrangeAccent,
@@ -500,7 +499,7 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
                   ),
                   const SizedBox(height: 15),
                   Text(
-                    "We sent a password reset link to:\n${widget.email}\n\nOpen the link in your email to set your new password.",
+                    AppStrings.resetInstructionMessage(widget.email),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 14,
@@ -524,9 +523,9 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
                       Icons.refresh,
                       color: Colors.deepOrangeAccent,
                     ),
-                    label: const Text(
-                      "Resend Link",
-                      style: TextStyle(
+                    label: Text(
+                      AppStrings.resendLinkBtn,
+                      style: const TextStyle(
                         color: Colors.deepOrangeAccent,
                         fontWeight: FontWeight.bold,
                       ),
@@ -551,9 +550,9 @@ class _ResetLinkSentScreenState extends State<ResetLinkSentScreen> {
                           borderRadius: BorderRadius.circular(15),
                         ),
                       ),
-                      child: const Text(
-                        "Go to Login",
-                        style: TextStyle(
+                      child: Text(
+                        AppStrings.goToLoginBtn,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

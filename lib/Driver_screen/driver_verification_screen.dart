@@ -53,7 +53,7 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
       'agreedToPledge': true,
       'VerificationStatus': 'pending',
       'rejectionReason': null,
-      'hasSeenAcceptedScreen': false, // ✅ reset عند كل تقديم جديد
+      'hasSeenAcceptedScreen': false,
     });
 
     setState(() => _isLoading = false);
@@ -95,11 +95,9 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                 snapshot.data!.data() as Map<String, dynamic>? ?? {};
             final status = data['VerificationStatus'] ?? 'new';
             final bool isBlocked = data['blocked'] ?? false;
-            // ✅ نفس اسم الـ field اللي عند Provider
             final bool hasSeenAccepted =
                 data['hasSeenAcceptedScreen'] ?? false;
 
-            // ─── BLOCKED ───────────────────────────────────────────
             if (isBlocked) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -143,7 +141,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // ─── ACCEPTED — first time: شاشة القبول ───────────────
             if (status == 'accepted' && !hasSeenAccepted) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -170,7 +167,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
                     height: 54,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        // ✅ سجّل إن السائق شاف شاشة القبول
                         await FirebaseFirestore.instance
                             .collection('DRIVERS')
                             .doc(uid)
@@ -198,7 +194,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // ─── ACCEPTED — already seen: داشبورد مباشرة ──────────
             if (status == 'accepted' && hasSeenAccepted) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Navigator.pushReplacement(
@@ -211,7 +206,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // ─── PENDING ───────────────────────────────────────────
             if (status == 'pending') {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -255,7 +249,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // ─── REJECTED ──────────────────────────────────────────
             if (status == 'rejected') {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -344,7 +337,6 @@ class _DriverVerificationScreenState extends State<DriverVerificationScreen> {
               );
             }
 
-            // ─── FORM ──────────────────────────────────────────────
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

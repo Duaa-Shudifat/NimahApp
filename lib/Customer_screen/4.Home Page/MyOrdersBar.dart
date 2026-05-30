@@ -161,7 +161,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
     final providerImage = data["Provider_Image"] ?? "";
     final hasRated = data["Rating"] != null;
 
-    // ── لون الحالة ──
     Color statusColor;
     switch (status) {
       case "Pending": statusColor = Colors.orange; break;
@@ -191,7 +190,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
         children: [
           Row(
             children: [
-              // صورة المطعم
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: providerImage.startsWith("http")
@@ -214,7 +212,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
               ),
               const SizedBox(width: 12),
 
-              // تفاصيل
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -247,7 +244,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
                 ),
               ),
 
-              // badge الحالة
               Container(
                 padding:
                 const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -268,14 +264,12 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
             ],
           ),
 
-          // ملاحظة
           if (note.isNotEmpty) ...[
             const SizedBox(height: 8),
             Text("📝 $note",
                 style: const TextStyle(color: Colors.grey, fontSize: 12)),
           ],
 
-          // ── زر Cancel للطلبات المعلقة ──
           if (status == "Pending") ...[
             const SizedBox(height: 10),
             Align(
@@ -298,7 +292,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
             ),
           ],
 
-          // ── زر Rate للطلبات المكتملة ──
           if (status == "Delivered") ...[
             const SizedBox(height: 10),
             SizedBox(
@@ -347,7 +340,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
     );
   }
 
-  // ===== CANCEL DIALOG =====
   void _showCancelDialog(String docId) {
     final reasons = [
       "Changed my mind",
@@ -383,7 +375,6 @@ class _ActiveOrdersEmptyScreenState extends State<ActiveOrdersEmptyScreen> {
     );
   }
 
-  // ===== TABS =====
   Widget _tabButton(String title, int index) {
     bool isSelected = selectedTab == index;
     return GestureDetector(

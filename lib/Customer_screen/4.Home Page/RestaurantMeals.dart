@@ -46,14 +46,121 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
     );
   }
 
+  void _showClearCartDialog(BuildContext context, VoidCallback onClear) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.shopping_cart, color: Colors.deepOrange),
+            SizedBox(width: 10),
+            Text("Different Restaurant",
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: RichText(
+          text: TextSpan(
+            style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+            children: [
+              const TextSpan(text: "Your cart has items from "),
+              TextSpan(
+                text: CartData.currentRestaurant,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, color: Colors.deepOrange),
+              ),
+              const TextSpan(
+                  text: ".\n\nClear your cart and add from this restaurant?"),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Keep Cart",
+                style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepOrange,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              onClear();
+            },
+            child: const Text("Clear & Add",
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addToCart(BuildContext context) {
+    double mealPrice =
+        double.tryParse(widget.meal["price"]!.replaceAll("\$", "").trim()) ?? 0.0;
+    int maxAvailable = int.tryParse(widget.meal["qty"] ?? "0") ?? 0;
+    String thisRestaurant = widget.meal["restaurantName"] ?? "";
+
+    if (CartData.cartItems.isNotEmpty &&
+        CartData.currentRestaurant.isNotEmpty &&
+        CartData.currentRestaurant != thisRestaurant) {
+      _showClearCartDialog(context, () {
+        CartData.cartItems.clear();
+        CartData.currentRestaurant = thisRestaurant;
+        CartData.currentRestaurantImage = widget.meal["restaurantImage"] ?? "";
+        _doAddToCart(mealPrice, maxAvailable, thisRestaurant);
+      });
+      return;
+    }
+
+    _doAddToCart(mealPrice, maxAvailable, thisRestaurant);
+  }
+
+  void _doAddToCart(double mealPrice, int maxAvailable, String thisRestaurant) {
+    int existingIndex = CartData.cartItems.indexWhere(
+          (item) => item.title == widget.meal["name"],
+    );
+
+    int currentInCart =
+    (existingIndex != -1) ? CartData.cartItems[existingIndex].qty : 0;
+
+    if (currentInCart + quantity <= maxAvailable) {
+      setState(() {
+        if (existingIndex != -1) {
+          CartData.cartItems[existingIndex].qty += quantity;
+        } else {
+          CartData.cartItems.add(
+            CartItemModel(
+              title: widget.meal["name"]!,
+              price: mealPrice,
+              img: widget.meal["image"]!,
+              qty: quantity,
+              maxQty: maxAvailable,
+            ),
+          );
+        }
+        quantity = 1;
+        CartData.currentRestaurant = thisRestaurant;
+        CartData.currentRestaurantImage = widget.meal["restaurantImage"] ?? "";
+      });
+      _showMsg(context, "Added to cart ✅", Colors.deepOrange);
+    } else {
+      _showMsg(
+        context,
+        "Limit reached! You have $currentInCart in cart, only ${maxAvailable - currentInCart} left.",
+        Colors.red,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    // تحويل الكمية المتاحة إلى رقم لعمليات التحقق
     final int maxAvailable = int.tryParse(widget.meal["qty"] ?? "0") ?? 0;
     final availableQty = widget.meal["qty"] ?? "0";
     final description = widget.meal["desc"] ?? "";
     final imageUrl = widget.meal["image"] ?? "";
-
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5CB58),
@@ -157,13 +264,14 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 6),
                               decoration: BoxDecoration(
                                 color: Colors.deepOrange,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Text(
-                                widget.meal["price"]!,
+                                "${widget.meal["price"]!} JD",
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -180,7 +288,8 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.black12,
                             borderRadius: BorderRadius.circular(12),
@@ -204,15 +313,13 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                             ? description
                             : "Fresh and delicious meal made with high quality ingredients.",
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          height: 1.4,
-                        ),
+                        style: const TextStyle(color: Colors.grey, height: 1.4),
                       ),
                     ),
                     const SizedBox(height: 25),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.deepOrange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(15),
@@ -222,9 +329,7 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                         children: [
                           GestureDetector(
                             onTap: () {
-                              if (quantity > 1) {
-                                setState(() => quantity--);
-                              }
+                              if (quantity > 1) setState(() => quantity--);
                             },
                             child: const Icon(Icons.remove),
                           ),
@@ -232,91 +337,73 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
                           Text(
                             "$quantity",
                             style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
+                                fontSize: 16, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(width: 12),
                           GestureDetector(
                             onTap: () {
-                              // منع تجاوز الكمية المتاحة في العداد
                               if (quantity < maxAvailable) {
                                 setState(() => quantity++);
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("Reached maximum available stock")),
+                                  const SnackBar(
+                                      content: Text(
+                                          "Reached maximum available stock")),
                                 );
                               }
                             },
                             child: Icon(
                               Icons.add,
-                              color: quantity < maxAvailable ? Colors.black : Colors.grey,
+                              color: quantity < maxAvailable
+                                  ? Colors.black
+                                  : Colors.grey,
                             ),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 30),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: SizedBox(
+                    if (maxAvailable == 0)
+                      Container(
                         width: double.infinity,
                         height: 50,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepOrange,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(15),
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade300,
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            "Out of Stock",
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          onPressed: () {
-                            // 1. تحويل السعر والكمية المتاحة لأرقام بدقة
-                            double mealPrice = double.tryParse(widget.meal["price"]!.replaceAll("\$", "").trim()) ?? 0.0;
-                            int maxAvailable = int.tryParse(widget.meal["qty"] ?? "0") ?? 0;
-
-                            // 2. البحث عن الوجبة في السلة
-                            int existingIndex = CartData.cartItems.indexWhere(
-                                  (item) => item.title == widget.meal["name"],
-                            );
-
-                            int currentInCart = (existingIndex != -1) ? CartData.cartItems[existingIndex].qty : 0;
-
-                            if (currentInCart + quantity <= maxAvailable) {
-                              setState(() {
-                                if (existingIndex != -1) {
-                                  CartData.cartItems[existingIndex].qty += quantity;
-                                } else {
-                                  // إضافة عنصر جديد تماماً
-                                  // ✅ بعد
-                                  CartData.cartItems.add(
-                                    CartItemModel(
-                                      title: widget.meal["name"]!,
-                                      price: mealPrice,
-                                      img: widget.meal["image"]!,
-                                      qty: quantity,
-                                      maxQty: maxAvailable, // ✅ أضف هاي السطر
-                                    ),
-                                  );
-                                }
-                                quantity = 1;
-                                CartData.currentRestaurant = widget.meal["restaurantName"] ?? ""; // ✅
-                              });
-                              _showMsg(context, "Added to cart ✅", Colors.deepOrange);
-                            } else {
-                              _showMsg(
-                                  context,
-                                  "Limit reached! You have $currentInCart in cart, only ${maxAvailable - currentInCart} left.",
-                                  Colors.red
-                              );
-                            }
-                          },
-                          child: Text(
-                            "Add to Cart ($quantity)",
-                            style: const TextStyle(fontSize: 18, color: Colors.white),
+                        ),
+                      )
+                    else
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.deepOrange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            onPressed: () => _addToCart(context),
+                            child: Text(
+                              "Add to Cart ($quantity)",
+                              style: const TextStyle(fontSize: 18, color: Colors.white),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -331,7 +418,10 @@ class _MealDetailsScreenState extends State<MealDetailsScreen> {
 
   void _showMsg(BuildContext context, String text, Color color) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text), backgroundColor: color, duration: const Duration(seconds: 1)),
+      SnackBar(
+          content: Text(text),
+          backgroundColor: color,
+          duration: const Duration(seconds: 1)),
     );
   }
 }

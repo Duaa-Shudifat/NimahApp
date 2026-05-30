@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // أضفنا هاد
-import 'package:cloud_firestore/cloud_firestore.dart'; // وأضفنا هاد
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../language/app_strings.dart';
 import '../1.Launch/launch_welcome_screen.dart';
 import 'I - My profile.dart';
@@ -15,7 +15,6 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. الحصول على الـ User الحالي من Firebase
     final User? currentUser = FirebaseAuth.instance.currentUser;
 
     return Container(
@@ -32,10 +31,9 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 2. استخدام StreamBuilder لجلب البيانات الحقيقية
           StreamBuilder<DocumentSnapshot>(
             stream: FirebaseFirestore.instance
-                .collection('CUSTOMERS') // تأكدي إن الكولكشن نفس اللي بالـ SignUp
+                .collection('CUSTOMERS')
                 .doc(currentUser?.uid)
                 .snapshots(),
             builder: (context, snapshot) {
@@ -43,7 +41,6 @@ class ProfileScreen extends StatelessWidget {
                 return const CircularProgressIndicator();
               }
 
-              // إذا ما في بيانات (مثلاً مستخدم مش زبون أو لسا ما تخزن)
               if (!snapshot.hasData || !snapshot.data!.exists) {
                 return _buildHeader("Guest User", "No Email", null);
               }
@@ -51,7 +48,7 @@ class ProfileScreen extends StatelessWidget {
               var userData = snapshot.data!.data() as Map<String, dynamic>;
               String name = userData['name'] ?? "No Name";
               String email = userData['email'] ?? "No Email";
-              String? logoUrl = userData['logoUrl']; // إذا كان بروفايدر مثلاً
+              String? logoUrl = userData['logoUrl'];
 
               return _buildHeader(name, email, logoUrl);
             },
@@ -59,7 +56,6 @@ class ProfileScreen extends StatelessWidget {
 
           const SizedBox(height: 20),
 
-          // ===== ITEMS =====
           buildItem(context, 'assets/icons/icon_p_2.svg', AppStrings.myProfile, const MyProfileScreen()),
           buildItem(context, 'assets/icons/icon_p_3.svg', AppStrings.deliveryAddress, const DeliveryAddressScreen()),
           buildItem(context, 'assets/icons/icon_p_4.svg', AppStrings.paymentMethods, const PaymentMethodsScreen()),
@@ -68,7 +64,6 @@ class ProfileScreen extends StatelessWidget {
 
           const Spacer(),
 
-          // زر تسجيل الخروج
           buildItem(context, 'assets/icons/icon_p_8.svg', AppStrings.logout, const LaunchWelcomeScreen()),
           const SizedBox(height: 20),
         ],
@@ -76,7 +71,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // دالة مساعدة لبناء الهيدر (عشان الكود يكون أنظف)
   Widget _buildHeader(String name, String email, String? imageUrl) {
     return Row(
       children: [
@@ -105,7 +99,6 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  // ===== ITEM WITH NAVIGATION (نفس الكود تبعك) =====
   Widget buildItem(BuildContext context, String iconPath, String title, Widget page) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -116,7 +109,7 @@ class ProfileScreen extends StatelessWidget {
           }
           if (page is MyProfileScreen) {
             await Navigator.push(context, MaterialPageRoute(builder: (_) => page));
-            Navigator.pop(context); // ✅
+            Navigator.pop(context);
           } else {
             Navigator.push(context, MaterialPageRoute(builder: (_) => page));
           }

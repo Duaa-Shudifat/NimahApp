@@ -14,11 +14,11 @@ class CategoryScreen extends StatefulWidget {
   const CategoryScreen({
     super.key,
     required this.title,
-    required this.city, // ✅ الجديد
+    required this.city,
   });
 
   final String title;
-  final String city; // ✅ الجديد
+  final String city;
 
   @override
   State<CategoryScreen> createState() => _CategoryScreenState();
@@ -235,7 +235,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
                   if (_searchQuery.isEmpty) const SizedBox(height: 12),
 
-                  // ✅ StreamBuilder مع فلتر المدينة
                   Expanded(
                     child: StreamBuilder<QuerySnapshot>(
                       stream: FirebaseFirestore.instance
@@ -252,7 +251,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                               ));
                         }
 
-                        // فلتر: بس المطاعم اللي عندها صورة
                         final allProviders =
                         snapshot.data!.docs.where((doc) {
                           final data = doc.data() as Map<String, dynamic>;
@@ -260,7 +258,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           return image.isNotEmpty;
                         }).toList();
 
-                        // فلتر البحث
                         final providers = _searchQuery.isEmpty
                             ? allProviders
                             : allProviders.where((doc) {
@@ -271,7 +268,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           return name.contains(_searchQuery);
                         }).toList();
 
-                        // ✅ رسالة لو ما في مطاعم بهاي المدينة
                         if (allProviders.isEmpty) {
                           return Center(
                             child: Column(
@@ -304,7 +300,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
                           );
                         }
 
-                        // شاشة "لا توجد نتائج بحث"
                         if (providers.isEmpty && _searchQuery.isNotEmpty) {
                           return Center(
                             child: Column(
@@ -366,107 +361,103 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
 
-  Future<void> addFakeProviders() async {
-    final providers = [
-      // 🍽️ Meals
-      {"name": "Zarqa Grand ",  "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress1.jpg", "blocked": false},
-      {"name": "See Food","city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress2.jpg", "blocked": false},
-      {"name": "Shawarma House",          "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress3.jpg", "blocked": false},
-      {"name": "Steak",           "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress4.jpg", "blocked": false},
-      {"name": "Sham",         "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress5.jpg", "blocked": false},
-      {"name": "Burger",           "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress6.jpg", "blocked": false},
-
-      // 🥖 Bakery
-      {"name": "Golden Bakery",   "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec1.jpg", "blocked": false},
-      {"name": "Modern Bakery",   "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec2.jpg", "blocked": false},
-      {"name": "Sanabel Bakery",       "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec3.jpg", "blocked": false},
-      {"name": "Ali Sweets",           "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec4.jpg", "blocked": false},
-      {"name": "Old Town Oven",           "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec5.jpg", "blocked": false},
-
-      // 🛒 Store
-      {"name": "Supermarket",       "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store1.jpg", "blocked": false},
-      {"name": "Al Noor",     "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store2.jpg", "blocked": false},
-      {"name": "Abu Khaled",  "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store3.jpg", "blocked": false},
-      {"name": "Al Ahli",     "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store4.jpg", "blocked": false},
-
-      // 🥦 Fresh Produce
-      {"name": "Fresh Market",      "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh1.jpg", "blocked": false},
-      {"name": "Fresh Veggies", "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh2.jpg", "blocked": false},
-      {"name": "Central Market",  "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh3.jpg", "blocked": false},
-    ];
-
-    for (final p in providers) {
-      await FirebaseFirestore.instance.collection('FOOD_PROVIDERS').add(p);
-    }
-
-    print("✅ Added ${providers.length} providers!");
-  }
-
-
-
-  Future<void> deleteFakeProviders() async {
-    final fakeName = [
-      "Zarqa Grand ",
-      "See Food",
-      "Shawarma House",
-      "Steak",
-      "Sham",
-      "Burger",
-
-
-      "Golden Bakery",
-      "Modern Bakery",
-      "Sanabel Bakery",
-      "Ali Sweets",
-      "Old Town Oven",
-
-      "Supermarket",
-      "Al Noor",
-      "Abu Khaled",
-      "Al Ahli",
-      "Fresh Market",
-      "Fresh Veggies",
-      "Central Market",
-
-
-      "Zarqa Grand Restaurant",
-      "Zarqa Grand",
-      "Central Produce Market",
-
-
-      "Jordan Authentic Kitchen",
-      "Jordan Authentic",
-
-      "Shawarma House",
-      "Golden Mansaf",
-      "Al Sham Falafel",
-      "Nablus Knafeh",
-      "Al Amal Golden Bakery",
-      "Al Noor Modern Bakery",
-      "Al Sanabel Bakery",
-      "Om Ali Sweets",
-      "Old Town Oven",
-      "Zarqa Supermarket",
-      "Al Noor Supermarket",
-      "Abu Khaled Mini Market",
-      "Al Ahli Supermarket",
-      "Zarqa Fresh Market",
-      "Abu Ahmad Fresh Veggies",
-    ];
-
-    for (final name in fakeName) {
-      final query = await FirebaseFirestore.instance
-          .collection('FOOD_PROVIDERS')
-          .where('name', isEqualTo: name)
-          .get();
-
-      for (final doc in query.docs) {
-        await doc.reference.delete();
-      }
-    }
-
-    print("✅ Deleted all fake providers!");
-  }
+  // Future<void> addFakeProviders() async {
+  //   final providers = [
+  //     {"name": "Zarqa Grand ",  "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress1.jpg", "blocked": false},
+  //     {"name": "See Food","city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress2.jpg", "blocked": false},
+  //     {"name": "Shawarma House",          "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress3.jpg", "blocked": false},
+  //     {"name": "Steak",           "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress4.jpg", "blocked": false},
+  //     {"name": "Sham",         "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress5.jpg", "blocked": false},
+  //     {"name": "Burger",           "city": "Zarqa", "providerType": "meals",         "VerificationStatus": "accepted", "logoUrl": "ress6.jpg", "blocked": false},
+  //
+  //     {"name": "Golden Bakery",   "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec1.jpg", "blocked": false},
+  //     {"name": "Modern Bakery",   "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec2.jpg", "blocked": false},
+  //     {"name": "Sanabel Bakery",       "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec3.jpg", "blocked": false},
+  //     {"name": "Ali Sweets",           "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec4.jpg", "blocked": false},
+  //     {"name": "Old Town Oven",           "city": "Zarqa", "providerType": "bakery",        "VerificationStatus": "accepted", "logoUrl": "bec5.jpg", "blocked": false},
+  //
+  //     {"name": "Supermarket",       "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store1.jpg", "blocked": false},
+  //     {"name": "Al Noor",     "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store2.jpg", "blocked": false},
+  //     {"name": "Abu Khaled",  "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store3.jpg", "blocked": false},
+  //     {"name": "Al Ahli",     "city": "Zarqa", "providerType": "store",         "VerificationStatus": "accepted", "logoUrl": "store4.jpg", "blocked": false},
+  //
+  //     {"name": "Fresh Market",      "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh1.jpg", "blocked": false},
+  //     {"name": "Fresh Veggies", "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh2.jpg", "blocked": false},
+  //     {"name": "Central Market",  "city": "Zarqa", "providerType": "fresh_produce", "VerificationStatus": "accepted", "logoUrl": "fresh3.jpg", "blocked": false},
+  //   ];
+  //
+  //   for (final p in providers) {
+  //     await FirebaseFirestore.instance.collection('FOOD_PROVIDERS').add(p);
+  //   }
+  //
+  //   print("✅ Added ${providers.length} providers!");
+  // }
+  //
+  //
+  //
+  // Future<void> deleteFakeProviders() async {
+  //   final fakeName = [
+  //     "Zarqa Grand ",
+  //     "See Food",
+  //     "Shawarma House",
+  //     "Steak",
+  //     "Sham",
+  //     "Burger",
+  //
+  //
+  //     "Golden Bakery",
+  //     "Modern Bakery",
+  //     "Sanabel Bakery",
+  //     "Ali Sweets",
+  //     "Old Town Oven",
+  //
+  //     "Supermarket",
+  //     "Al Noor",
+  //     "Abu Khaled",
+  //     "Al Ahli",
+  //     "Fresh Market",
+  //     "Fresh Veggies",
+  //     "Central Market",
+  //
+  //
+  //     "Zarqa Grand Restaurant",
+  //     "Zarqa Grand",
+  //     "Central Produce Market",
+  //
+  //
+  //     "Jordan Authentic Kitchen",
+  //     "Jordan Authentic",
+  //
+  //     "Shawarma House",
+  //     "Golden Mansaf",
+  //     "Al Sham Falafel",
+  //     "Nablus Knafeh",
+  //     "Al Amal Golden Bakery",
+  //     "Al Noor Modern Bakery",
+  //     "Al Sanabel Bakery",
+  //     "Om Ali Sweets",
+  //     "Old Town Oven",
+  //     "Zarqa Supermarket",
+  //     "Al Noor Supermarket",
+  //     "Abu Khaled Mini Market",
+  //     "Al Ahli Supermarket",
+  //     "Zarqa Fresh Market",
+  //     "Abu Ahmad Fresh Veggies",
+  //   ];
+  //
+  //   for (final name in fakeName) {
+  //     final query = await FirebaseFirestore.instance
+  //         .collection('FOOD_PROVIDERS')
+  //         .where('name', isEqualTo: name)
+  //         .get();
+  //
+  //     for (final doc in query.docs) {
+  //       await doc.reference.delete();
+  //     }
+  //   }
+  //
+  //   print("✅ Deleted all fake providers!");
+  // }
   Widget _restaurantCard(
       BuildContext context,
       String name,
@@ -484,7 +475,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
             builder: (_) => RestaurantMenuScreen(
               restaurantName: name,
               providerUid: providerUid,
-              restaurantImage: image, // ✅ أضف هاي
+              restaurantImage: image,
             ),
         ));
       },

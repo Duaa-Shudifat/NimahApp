@@ -85,7 +85,6 @@ class _CartPanelState extends State<CartPanel> {
                   ),
                   child: Row(
                     children: [
-                      // ✅ صورة من network أو asset
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: item.img.startsWith("http")
@@ -124,7 +123,6 @@ class _CartPanelState extends State<CartPanel> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            // ✅ سعر double
                             Text(
                               "${item.price.toStringAsFixed(2)} JD",
                               style: const TextStyle(
@@ -162,9 +160,7 @@ class _CartPanelState extends State<CartPanel> {
                                   fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: 6),
-                            // ✅ بعد
-                            // ✅ بعد — نفس المنطق بس أوضح
-                            // ✅ في CartPanel — عدّل زر الـ +
+
                             GestureDetector(
                               onTap: () {
                                 if (item.qty < item.maxQty) {
@@ -223,7 +219,6 @@ class _CartPanelState extends State<CartPanel> {
                   style: TextStyle(
                       fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                // ✅ total بـ double
                 Text(
                   "${getTotal().toStringAsFixed(2)} JD",
                   style: const TextStyle(

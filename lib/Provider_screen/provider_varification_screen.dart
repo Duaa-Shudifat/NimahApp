@@ -130,7 +130,6 @@ class _ProviderVerificationScreenState
             final bool hasSeenAccepted =
                 data['hasSeenAcceptedScreen'] ?? false;
 
-            // ─── BLOCKED ───────────────────────────────────────────────
             if (isBlocked) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -176,7 +175,6 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // ─── ACCEPTED — first time: show congratulations screen ────
             if (status == 'accepted' && !hasSeenAccepted) {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -205,7 +203,6 @@ class _ProviderVerificationScreenState
                     height: 54,
                     child: ElevatedButton.icon(
                       onPressed: () async {
-                        // Mark as seen so this screen never shows again
                         await FirebaseFirestore.instance
                             .collection('FOOD_PROVIDERS')
                             .doc(uid)
@@ -236,7 +233,6 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // ─── ACCEPTED — already seen: go directly to home ──────────
             if (status == 'accepted' && hasSeenAccepted) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 Navigator.pushReplacement(
@@ -250,7 +246,6 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // ─── PENDING ───────────────────────────────────────────────
             if (status == 'pending') {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -298,7 +293,6 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // ─── REJECTED ──────────────────────────────────────────────
             if (status == 'rejected') {
               return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -393,7 +387,6 @@ class _ProviderVerificationScreenState
               );
             }
 
-            // ─── FORM (new or any other status) ────────────────────────
             return SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

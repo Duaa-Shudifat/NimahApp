@@ -143,21 +143,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (!mounted) return;
 
-        if (driverStatus == 'accepted') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DriverDashboard(),
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DriverVerificationScreen(),
-            ),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DriverVerificationScreen(),
+          ),
+        );
 
         return;
       }

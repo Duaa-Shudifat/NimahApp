@@ -55,7 +55,7 @@ class _MyProfileScreenState extends State<MyProfileScreen> {
         'name': _nameController.text.trim(),
         'phone': fullPhone,
         'city': _selectedCity,
-        'selectedCity': '$_selectedCity, Jordan', // ✅ هاي الإضافة الوحيدة
+        'selectedCity': '$_selectedCity, Jordan',
       });
 
       ScaffoldMessenger.of(context).showSnackBar(

@@ -68,9 +68,7 @@ class _DriverDashboardState extends State<DriverDashboard> {
   }
 }
 
-// ==========================================
-// 1. Stats / Dashboard Tab
-// ==========================================
+
 class DriverStatsTab extends StatelessWidget {
   const DriverStatsTab({super.key});
 
@@ -102,7 +100,6 @@ class DriverStatsTab extends StatelessWidget {
       }
     }
 
-    // Ratings from FEEDBACK
     List<double> ratingPerMonth = List.filled(6, 0);
     List<int> ratingCountPerMonth = List.filled(6, 0);
 
@@ -390,9 +387,7 @@ class DriverStatsTab extends StatelessWidget {
   }
 }
 
-// ==========================================
-// 2. Orders / Requests Tab
-// ==========================================
+
 class DriverRequestsTab extends StatefulWidget {
   const DriverRequestsTab({super.key});
 
@@ -401,17 +396,14 @@ class DriverRequestsTab extends StatefulWidget {
 }
 
 class _DriverRequestsTabState extends State<DriverRequestsTab> {
-  // نفس منطق DriverRequestsPage القديمة لكن مدمجة هنا
-  // (اتركيها كـ placeholder أو استوردي الـ widget الكامل)
+
   @override
   Widget build(BuildContext context) {
     return const DriverRequestsPage();
   }
 }
 
-// ==========================================
-// 3. Profile Tab
-// ==========================================
+
 class DriverProfileTab extends StatelessWidget {
   const DriverProfileTab({super.key});
 

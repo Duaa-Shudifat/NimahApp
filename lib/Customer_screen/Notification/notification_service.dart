@@ -8,7 +8,6 @@ import 'package:googleapis_auth/auth_io.dart';
 class NotificationService {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  // ✅ بيانات الـ Service Account
   static const _serviceAccountJson = {
     "type": "service_account",
     "project_id": "nimah-app-74450",
@@ -86,12 +85,11 @@ class NotificationService {
       });
     }
   }
-  // ✅ دالة إرسال الإشعار عبر V1 API
   static Future<void> sendNotification({
     required String fcmToken,
     required String title,
     required String body,
-    String orderId = "", // ← أضف هاد السطر بس
+    String orderId = "",
     required String type,
 
 
@@ -114,7 +112,6 @@ class NotificationService {
 
         url,
         headers: {'Content-Type': 'application/json'},
-        // بعد ✅
         body: jsonEncode({
           'message': {
             'token': fcmToken,
@@ -122,7 +119,7 @@ class NotificationService {
               'title': title,
               'body': body,
             },
-            'data': {        // ← أضف هاد
+            'data': {
               'orderId': orderId,
               "type": type,
             },

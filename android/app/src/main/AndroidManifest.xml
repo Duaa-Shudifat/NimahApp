@@ -1,7 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.nimah_app_new">
 
-    <!-- Permissions يجب أن تكون هنا وليس داخل <application> -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
@@ -31,7 +30,6 @@
             </intent-filter>
         </activity>
 
-        <!-- Flutter meta-data -->
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

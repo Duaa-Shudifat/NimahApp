@@ -33,7 +33,6 @@ class _PasswordSettingsScreenState extends State<PasswordSettingsScreen> {
       return;
     }
 
-    // ✅ تحقق من طول وكلمات المرور المعقدة
     final passwordRegEx = RegExp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#\$%^&*]).{8,}$');
     if (!passwordRegEx.hasMatch(newPass)) {
       _showMsg(

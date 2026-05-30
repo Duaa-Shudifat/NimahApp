@@ -22,7 +22,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       if (currentStatus == "accepted") currentStatus = "picked up";
       else if (currentStatus == "picked up") currentStatus = "on the way";
       else if (currentStatus == "on th\e way") currentStatus = "delivered";
-      widget.orderData['status'] = currentStatus; // تحديث البيانات الأصلية [32، 42]
+      widget.orderData['status'] = currentStatus;
     });
   }
 
@@ -36,7 +36,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
       ),
       body: Column(
         children: [
-          // قسم الموقع (📍)
           Container(
             width: double.infinity, margin: const EdgeInsets.all(15), padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), borderRadius: BorderRadius.circular(20)),
@@ -54,7 +53,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- إرجاع بيانات الزبون (Customer Details) --- [34، 43]
                     const Text("👤 Customer Details", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     _buildInfoRow("Name", widget.orderData['customer']),
@@ -62,7 +60,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
 
                     const Divider(height: 40),
 
-                    // --- إرجاع قائمة الأصناف (Items List) --- [1]
                     const Text("🍔 Ordered Items", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 10),
                     ...List.generate(
@@ -78,7 +75,6 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> {
                     ),
 
                     const SizedBox(height: 40),
-                    // زر الحالات التفاعلي
                     SizedBox(
                       width: double.infinity, height: 60,
                       child: ElevatedButton(

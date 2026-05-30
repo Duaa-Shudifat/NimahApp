@@ -109,20 +109,19 @@ class _LaunchWelcomeScreenState extends State<LaunchWelcomeScreen> {
             ],
           ),
 
-          // 🌍 زر اللغة
-          Positioned(
-            top: 40,
-            right: 10,
-            child: IconButton(
-              iconSize: 35,
-              icon: const Icon(Icons.language),
-              onPressed: () {
-                setState(() {
-                  AppStrings.isArabic = !AppStrings.isArabic;
-                });
-              },
-            ),
-          ),
+          // Positioned(
+          //   top: 40,
+          //   right: 10,
+          //   child: IconButton(
+          //     iconSize: 35,
+          //     icon: const Icon(Icons.language),
+          //     onPressed: () {
+          //       setState(() {
+          //         AppStrings.isArabic = !AppStrings.isArabic;
+          //       });
+          //     },
+          //   ),
+          // ),
 
         ],
       ),

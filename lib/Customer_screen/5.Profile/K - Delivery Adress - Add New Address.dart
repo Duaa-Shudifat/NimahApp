@@ -1,4 +1,3 @@
-// K - Add New Address Screen
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -16,7 +15,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
   final TextEditingController addressController = TextEditingController();
   final MapController _mapController = MapController();
 
-  LatLng _selectedLocation = const LatLng(32.5568, 35.8469); // إربد افتراضي
+  LatLng _selectedLocation = const LatLng(32.5568, 35.8469);
   bool _isLoadingLocation = false;
 
   @override
@@ -90,7 +89,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        // ✅ الخريطة مع تحديد الموقع
                         ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: SizedBox(
@@ -113,7 +111,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                   children: [
                                     TileLayer(
                                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                                      userAgentPackageName: 'com.example.nimah_app', // ← اسم الباكج تبعك
+                                      userAgentPackageName: 'com.example.nimah_app',
                                     ),
                                     MarkerLayer(
                                       markers: [
@@ -131,7 +129,7 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
                                     ),
                                   ],
                                 ),
-                                // ✅ زر موقعي الحالي
+
                                 Positioned(
                                   bottom: 10,
                                   right: 10,
@@ -177,7 +175,6 @@ class _AddAddressScreenState extends State<AddAddressScreen> {
 
                         const SizedBox(height: 20),
 
-                        // ✅ زر Apply
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(

@@ -115,14 +115,12 @@ class _NotificationsPanelState extends State<NotificationsPanel> {
     return InkWell(
       onTap: () async {
         if (type == "delivery" && orderId.toString().isNotEmpty) {
-          // ✅ حدّث الإشعار كمقروء
           if (docId != null) {
             await FirebaseFirestore.instance
                 .collection('USER_NOTIFICATIONS')
                 .doc(docId)
                 .update({'isRead': true});
           }
-          // ✅ افتح صفحة الطلبات على تبويب Completed
           if (context.mounted) {
             Navigator.push(
               context,

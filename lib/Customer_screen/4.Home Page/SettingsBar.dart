@@ -16,51 +16,50 @@ import 'back_icon.dart';
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 
-  // ================= LANGUAGE SHEET =================
-  void _showLanguageSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-
-              const Text(
-                "Select Language",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              ListTile(
-                title: const Text("English"),
-                onTap: () {
-                  AppStrings.isArabic = false;
-                  Navigator.pop(context);
-                },
-              ),
-
-              ListTile(
-                title: const Text("العربية"),
-                onTap: () {
-                  AppStrings.isArabic = true;
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // void _showLanguageSheet(BuildContext context) {
+  //   showModalBottomSheet(
+  //     context: context,
+  //     shape: const RoundedRectangleBorder(
+  //       borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+  //     ),
+  //     builder: (context) {
+  //       return Padding(
+  //         padding: const EdgeInsets.all(20),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //
+  //             const Text(
+  //               "Select Language",
+  //               style: TextStyle(
+  //                 fontSize: 18,
+  //                 fontWeight: FontWeight.bold,
+  //               ),
+  //             ),
+  //
+  //             const SizedBox(height: 15),
+  //
+  //             ListTile(
+  //               title: const Text("English"),
+  //               onTap: () {
+  //                 AppStrings.isArabic = false;
+  //                 Navigator.pop(context);
+  //               },
+  //             ),
+  //
+  //             ListTile(
+  //               title: const Text("العربية"),
+  //               onTap: () {
+  //                 AppStrings.isArabic = true;
+  //                 Navigator.pop(context);
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -127,18 +126,18 @@ class SettingsScreen extends StatelessWidget {
 
 
 
-                      // 🔥 LANGUAGE OPTION
-                      ListTile(
-                        leading: const Icon(
-                          Icons.language,
-                          color: Colors.deepOrange,
-                        ),
-                        title: const Text("Language"),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                        onTap: () {
-                          _showLanguageSheet(context);
-                        },
-                      ),
+                      // // 🔥 LANGUAGE OPTION
+                      // ListTile(
+                      //   leading: const Icon(
+                      //     Icons.language,
+                      //     color: Colors.deepOrange,
+                      //   ),
+                      //   title: const Text("Language"),
+                      //   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                      //   onTap: () {
+                      //     _showLanguageSheet(context);
+                      //   },
+                      // ),
 
                       ListTile(
                         leading: const Icon(

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
 
-/// ----------------------
-/// Validation Function
-/// ----------------------
-
 
 bool validateCardForm({
   required String name,
@@ -18,11 +14,6 @@ bool validateCardForm({
   if (cvv.length < 3) return false;
   return true;
 }
-
-
-/// ----------------------
-/// Add Card Screen
-/// ----------------------
 
 
 
@@ -177,9 +168,6 @@ class _AddCardScreenState extends State<AddCardScreen> {
     );
   }
 }
-/// ----------------------
-/// Payment Methods Screen
-/// ----------------------
 
 class PaymentMethodsScreen extends StatefulWidget {
   const PaymentMethodsScreen({super.key});

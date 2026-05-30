@@ -10,12 +10,12 @@ class RestaurantMenuScreen extends StatelessWidget {
     super.key,
     required this.restaurantName,
     required this.providerUid,
-    required this.restaurantImage, // ✅ أضف هاي
+    required this.restaurantImage,
   });
 
   final String restaurantName;
   final String providerUid;
-  final String restaurantImage; // ✅ أضف هاي
+  final String restaurantImage;
 
   void openCart(BuildContext context) {
     showGeneralDialog(
@@ -51,9 +51,7 @@ class RestaurantMenuScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    CartData.currentRestaurantImage = restaurantImage;
-    CartData.currentRestaurant = restaurantName;
-    CartData.currentRestaurantId = providerUid;
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5CB58),
@@ -114,8 +112,11 @@ class RestaurantMenuScreen extends StatelessWidget {
                     );
                   }
 
-                  final meals = snapshot.data!.docs;
-
+                  final meals = snapshot.data!.docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    final available = (data['available'] ?? 0) as int;
+                    return available > 0;
+                  }).toList();
                   if (meals.isEmpty) {
                     return const Center(
                       child: Text(
@@ -149,8 +150,9 @@ class RestaurantMenuScreen extends StatelessWidget {
                       const SizedBox(height: 10),
                       ...meals.map((doc) {
                         final data = doc.data() as Map<String, dynamic>;
+
                         return GestureDetector(
-                          onTap: () async {
+                          onTap: () {
                             final Map<String, String> mealData = {
                               "name": data["name"] ?? "",
                               "price": "${data["price"] ?? "0"}",
@@ -158,45 +160,14 @@ class RestaurantMenuScreen extends StatelessWidget {
                               "qty": "${data["available"] ?? 0}",
                               "desc": data["description"] ?? "",
                               "restaurantName": restaurantName,
+                              "restaurantImage": restaurantImage,
                             };
-
-                            if (CartData.cartItems.isNotEmpty &&
-                                CartData.currentRestaurant != restaurantName) {
-                              final shouldClear = await showDialog<bool>(
-                                context: context,
-                                builder: (ctx) => AlertDialog(
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20)),
-                                  title: const Text("Different Restaurant"),
-                                  content: Text(
-                                    "Your cart has items Clear cart and order",
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
-                                      child: const Text("Cancel",
-                                          style: TextStyle(color: Colors.grey)),
-                                    ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.deepOrange),
-                                      onPressed: () => Navigator.pop(ctx, true),
-                                      child: const Text("Clear & Continue",
-                                          style: TextStyle(color: Colors.white)),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (shouldClear != true) return;
-                              CartData.cartItems.clear();
-                              CartData.currentRestaurant = "";
-                            }
 
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => MealDetailsScreen(meal: mealData),
+                                builder: (_) =>
+                                    MealDetailsScreen(meal: mealData),
                               ),
                             );
                           },
@@ -204,8 +175,7 @@ class RestaurantMenuScreen extends StatelessWidget {
                             margin: const EdgeInsets.only(bottom: 15),
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF5CB58)
-                                  .withValues(alpha: 0.2),
+                              color: const Color(0xFFF5CB58).withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -238,7 +208,7 @@ class RestaurantMenuScreen extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        "\$${data["price"] ?? "0"}",
+                                        "${data["price"] ?? "0"} JD",
                                         style: const TextStyle(
                                           color: Colors.deepOrange,
                                         ),

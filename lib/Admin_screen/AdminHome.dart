@@ -4,7 +4,7 @@ import 'AdminDashboard.dart';
 import 'Driver.dart';
 import 'ProvidersPage.dart';
 import 'UsersPage.dart';
-import 'OrdersAdminPage.dart';
+// import 'OrdersAdminPage.dart';
 
 class AdminHome extends StatefulWidget {
   const AdminHome({super.key});
@@ -22,7 +22,7 @@ class _AdminHomeState extends State<AdminHome> {
     const UsersPage(),
     const ProvidersPage(),
     const DriverPage(),
-    const OrdersAdminPage(),
+    // const (OrdersAdminPage),
   ];
 
   @override
@@ -65,10 +65,10 @@ class _AdminHomeState extends State<AdminHome> {
             label: "Driver",
           ),
 
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long),
-            label: "Orders",
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.receipt_long),
+          //   label: "Orders",
+          // ),
         ],
       ),
     );

@@ -74,7 +74,7 @@ class _FavoriteState extends State<Favorite> {
                       final item = restaurants[index];
 
                       return GestureDetector(
-                        onTap: () {}, // ممكن تضيف navigation هون بعدين
+                        onTap: () {},
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 15),
                           height: 140,
@@ -84,7 +84,6 @@ class _FavoriteState extends State<Favorite> {
                           child: Stack(
                             alignment: Alignment.center,
                             children: [
-                              // ✅ الصورة الباهتة
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(25),
                                 child: ColorFiltered(
@@ -112,7 +111,6 @@ class _FavoriteState extends State<Favorite> {
                                 ),
                               ),
 
-                              // ✅ اسم المطعم بالنص
                               Text(
                                 item["name"]!,
                                 style: const TextStyle(
@@ -128,7 +126,6 @@ class _FavoriteState extends State<Favorite> {
                                 ),
                               ),
 
-                              // ✅ زر المفضلة
                               Positioned(
                                 top: 10,
                                 right: 10,

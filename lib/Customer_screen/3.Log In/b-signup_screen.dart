@@ -113,7 +113,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
           'https://api.cloudinary.com/v1_1/dasrhmmgz/image/upload');
       final request = http.MultipartRequest('POST', url)
         ..fields['upload_preset'] = 'f19cagom'
-        ..files.add(await http.MultipartFile.fromPath('file', _restaurantImage!.path));
+        ..files.add(await http.MultipartFile.fromPath(
+            'file', _restaurantImage!.path));
       final response = await request.send();
       final responseData = await response.stream.toBytes();
       final jsonData = jsonDecode(String.fromCharCodes(responseData));
@@ -135,64 +136,65 @@ class _SignUpScreenState extends State<SignUpScreen> {
         password.isEmpty ||
         selectedCity == null ||
         selectedRole == null) {
-      _showSnackBar('Please fill all fields');
+      _showSnackBar(AppStrings.fillFieldsError);
       return false;
     }
 
     // 2. Email Validation
-    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text.trim())) {
-      _showSnackBar("Invalid email format");
+    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+')
+        .hasMatch(emailController.text.trim())) {
+      _showSnackBar(AppStrings.invalidEmail);
       return false;
     }
 
-    // 3. 🔥 Password Strength Validations
+    // 3. Password Strength Validations
     if (password.length < 8) {
-      _showSnackBar("Password should be at least 8 characters");
+      _showSnackBar(AppStrings.passwordLengthError);
       return false;
     }
     if (!RegExp(r'[A-Z]').hasMatch(password)) {
-      _showSnackBar("Password should contain at least one uppercase letter");
+      _showSnackBar(AppStrings.passwordComplexityError);
       return false;
     }
     if (!RegExp(r'[a-z]').hasMatch(password)) {
-      _showSnackBar("Password should contain at least one lowercase letter");
+      _showSnackBar(AppStrings.passwordComplexityError);
       return false;
     }
     if (!RegExp(r'[0-9]').hasMatch(password)) {
-      _showSnackBar("Password should contain at least one number");
+      _showSnackBar(AppStrings.passwordComplexityError);
       return false;
     }
     if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(password)) {
-      _showSnackBar("Password should contain at least one special character");
+      _showSnackBar(AppStrings.passwordComplexityError);
       return false;
     }
 
     // 4. Confirm Password Match
     if (password != confirmPasswordController.text) {
-      _showSnackBar('Passwords do not match');
+      _showSnackBar(AppStrings.passwordsNotMatch);
       return false;
     }
 
     // 5. Phone Validation (+962)
     String fullPhone = "+962${phoneController.text.trim()}";
     if (!RegExp(r'^\+9627\d{8}$').hasMatch(fullPhone)) {
-      _showSnackBar("Phone should be +962 followed by 8 digits (7XXXXXXXX)");
+      _showSnackBar(AppStrings.phoneInvalid);
       return false;
     }
 
     // 6. Role Specific Validations
     if (selectedRole == 'driver' && selectedVehicleType == null) {
-      _showSnackBar('Please select vehicle type');
+      _showSnackBar(AppStrings.selectVehicleError);
       return false;
     }
 
     if (selectedRole == 'provider') {
       if (selectedProviderType == null) {
-        _showSnackBar('Please select provider type');
+        _showSnackBar(AppStrings.selectRoleError);
         return false;
       }
       if (_restaurantImage == null) {
-        _showSnackBar("Please upload a logo");
+        _showSnackBar(AppStrings.uploadLogoError);
         return false;
       }
     }
@@ -200,14 +202,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     // 7. Name Validation
     String name = nameController.text.trim();
     if (!RegExp(r'^[a-zA-Z\u0600-\u06FF ]{3,30}$').hasMatch(name)) {
-      _showSnackBar("Name should be 3-30 letters only");
+      _showSnackBar(AppStrings.nameError);
       return false;
     }
 
     return true;
   }
 
-// دالة مساعدة لتسهيل عرض الرسائل
   void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -229,7 +230,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (phoneDoc.exists) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Phone number already registered")),
+            SnackBar(content: Text(AppStrings.phoneAlreadyExists)),
           );
           setState(() => _isLoading = false);
         }
@@ -265,7 +266,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         'providerType': selectedProviderType ?? "",
         'createdAt': FieldValue.serverTimestamp(),
         'logoUrl': logoUrl ?? "",
-        'VerificationStatus': 'new', // ✅ أضف هاد
+        'VerificationStatus': 'new',
       });
 
       await FirebaseFirestore.instance
@@ -290,20 +291,23 @@ class _SignUpScreenState extends State<SignUpScreen> {
       } else if (selectedRole == 'provider') {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const ProviderVerificationScreen ()),
+          MaterialPageRoute(
+              builder: (context) => const ProviderVerificationScreen()),
               (route) => false,
         );
       } else if (selectedRole == 'driver') {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const DriverVerificationScreen()),              (route) => false,
+          MaterialPageRoute(
+              builder: (context) => const DriverVerificationScreen()),
+              (route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
-      String message = 'An error occurred';
-      if (e.code == 'email-already-in-use') message = 'Email already registered';
-      if (e.code == 'weak-password') message = 'Password is too weak';
-      if (e.code == 'invalid-email') message = 'Invalid email format';
+      String message = AppStrings.generalError;
+      if (e.code == 'email-already-in-use') message = AppStrings.emailAlreadyInUse;
+      if (e.code == 'weak-password') message = AppStrings.weakPassword;
+      if (e.code == 'invalid-email') message = AppStrings.invalidEmail;
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -315,7 +319,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Error: $e"),
+            content: Text("${AppStrings.generalError}: $e"),
             duration: const Duration(seconds: 15),
             backgroundColor: Colors.red,
           ),
@@ -381,7 +385,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           customInput(
                             child: TextField(
                               controller: nameController,
-                              decoration: inputDecoration("Name"),
+                              decoration: inputDecoration(AppStrings.name),
                             ),
                           ),
 
@@ -397,9 +401,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           customInput(
                             child: Row(
                               children: [
-                                const Text(
-                                  "+962 ",
-                                  style: TextStyle(
+                                Text(
+                                  "${AppStrings.phoneCode} ",
+                                  style: const TextStyle(
                                     color: Colors.brown,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
@@ -439,17 +443,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 value: selectedCity,
                                 hint: Text(AppStrings.selectCity),
                                 items: [
-                                  "Amman",
-                                  "Irbid",
-                                  "Zarqa",
-                                  "Aqaba",
-                                  "Salt",
-                                  "Mafraq",
-                                  "Jerash",
-                                  "Ajloun",
-                                  "Karak",
-                                  "Tafilah",
-                                  "Ma'an"
+                                  AppStrings.amman,
+                                  AppStrings.irbid,
+                                  AppStrings.zarqa,
+                                  AppStrings.aqaba,
+                                  AppStrings.balqa,
+                                  AppStrings.mafraq,
+                                  AppStrings.jerash,
+                                  AppStrings.ajloun,
+                                  AppStrings.karak,
+                                  AppStrings.tafila,
+                                  AppStrings.maan,
                                 ].map((e) {
                                   return DropdownMenuItem(
                                     value: e,
@@ -508,19 +512,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: DropdownButton<String>(
                                 isExpanded: true,
                                 value: selectedRole,
-                                hint: const Text("Select Role"),
-                                items: const [
+                                hint: Text(AppStrings.selectRole),
+                                items: [
                                   DropdownMenuItem(
                                     value: "customer",
-                                    child: Center(child: Text("Customer")),
+                                    child: Center(
+                                        child: Text(AppStrings.customer)),
                                   ),
                                   DropdownMenuItem(
                                     value: "provider",
-                                    child: Center(child: Text("Provider")),
+                                    child: Center(
+                                        child: Text(AppStrings.provider)),
                                   ),
                                   DropdownMenuItem(
                                     value: "driver",
-                                    child: Center(child: Text("Driver")),
+                                    child: Center(
+                                        child: Text(AppStrings.driver)),
                                   ),
                                 ],
                                 onChanged: (v) {
@@ -542,22 +549,25 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 child: DropdownButton<String>(
                                   isExpanded: true,
                                   value: selectedVehicleType,
-                                  hint: const Text("Vehicle Type"),
-                                  items: const [
+                                  hint: Text(AppStrings.vehicleType),
+                                  items: [
                                     DropdownMenuItem(
                                         value: "car",
-                                        child: Center(child: Text("Car"))),
+                                        child: Center(
+                                            child: Text(AppStrings.car))),
                                     DropdownMenuItem(
                                         value: "bike",
-                                        child: Center(child: Text("Bike"))),
+                                        child: Center(
+                                            child: Text(AppStrings.bike))),
                                     DropdownMenuItem(
                                         value: "Scooter",
-                                        child:
-                                        Center(child: Text("Scooter"))),
+                                        child: Center(
+                                            child: Text(AppStrings.scooter))),
                                     DropdownMenuItem(
                                         value: "Motorcycle",
-                                        child:
-                                        Center(child: Text("Motorcycle"))),
+                                        child: Center(
+                                            child:
+                                            Text(AppStrings.motorcycle))),
                                   ],
                                   onChanged: (v) =>
                                       setState(() => selectedVehicleType = v),
@@ -572,22 +582,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 child: DropdownButton<String>(
                                   isExpanded: true,
                                   value: selectedProviderType,
-                                  hint: const Text("Provider Type"),
-                                  items: const [
+                                  hint: Text(AppStrings.selectRole),
+                                  items: [
                                     DropdownMenuItem(
                                         value: "meals",
-                                        child: Center(child: Text("Meals"))),
+                                        child: Center(
+                                            child: Text(AppStrings.meals))),
                                     DropdownMenuItem(
                                         value: "fresh_produce",
                                         child: Center(
-                                            child: Text("Fresh Produce"))),
+                                            child:
+                                            Text(AppStrings.freshProduce))),
                                     DropdownMenuItem(
                                         value: "bakery",
                                         child: Center(
-                                            child: Text("Bakery Products"))),
+                                            child: Text(
+                                                AppStrings.bakeryProducts))),
                                     DropdownMenuItem(
                                         value: "store",
-                                        child: Center(child: Text("Store"))),
+                                        child: Center(
+                                            child: Text(AppStrings.Store))),
                                   ],
                                   onChanged: (v) =>
                                       setState(() => selectedProviderType = v),
@@ -611,8 +625,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                     const SizedBox(width: 10),
                                     Text(
                                       _restaurantImage == null
-                                          ? "Upload Logo"
-                                          : "✅ Image Selected",
+                                          ? AppStrings.uploadLogo
+                                          : AppStrings.imageSelected,
                                       style: const TextStyle(
                                           color: Colors.brown),
                                     ),
@@ -656,8 +670,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               child: _isLoading
                                   ? const CircularProgressIndicator(
                                   color: Colors.white)
-                                  : const Text("Sign Up",
-                                  style: TextStyle(color: Colors.white)),
+                                  : Text(AppStrings.signUpBtn,
+                                  style: const TextStyle(
+                                      color: Colors.white)),
                             ),
                           ),
 
@@ -702,13 +717,13 @@ class _OTPScreenState extends State<OTPScreen> {
       await FirebaseAuth.instance.signInWithCredential(credential);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Phone Verified ✅")),
+          SnackBar(content: Text(AppStrings.phoneVerified)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Invalid code ❌")),
+          SnackBar(content: Text(AppStrings.invalidCode)),
         );
       }
     }
@@ -717,19 +732,21 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Enter OTP")),
+      appBar: AppBar(title: Text(AppStrings.enterOTP)),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text("Code sent to ${widget.phone}"),
+            Text(AppStrings.codeSentTo + widget.phone),
             TextField(
               controller: codeController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(hintText: "Enter OTP"),
+              decoration: InputDecoration(hintText: AppStrings.enterOTP),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(onPressed: verifyOTP, child: const Text("Verify")),
+            ElevatedButton(
+                onPressed: verifyOTP,
+                child: Text(AppStrings.verifyBtn)),
           ],
         ),
       ),
@@ -737,7 +754,7 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 }
 
-// ✅ EmailOTPScreen
+//  EmailOTPScreen
 class EmailOTPScreen extends StatefulWidget {
   final String correctOTP;
   final VoidCallback onVerified;
@@ -769,18 +786,18 @@ class _EmailOTPScreenState extends State<EmailOTPScreen> {
   void verify() {
     if (_enteredOTP.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter the full code")),
+        SnackBar(content: Text(AppStrings.enterFullCodeError)),
       );
       return;
     }
     if (_enteredOTP == widget.correctOTP) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email Verified ✅")),
+        SnackBar(content: Text(AppStrings.emailVerified)),
       );
       widget.onVerified();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Wrong OTP ❌")),
+        SnackBar(content: Text(AppStrings.wrongOTP)),
       );
     }
   }
@@ -795,9 +812,9 @@ class _EmailOTPScreenState extends State<EmailOTPScreen> {
           Column(
             children: [
               const SizedBox(height: 70),
-              const Text(
-                "Verify Email",
-                style: TextStyle(
+              Text(
+                AppStrings.verifyEmailTitle,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.brown,
@@ -833,20 +850,20 @@ class _EmailOTPScreenState extends State<EmailOTPScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        const Text(
-                          "Check your email",
-                          style: TextStyle(
+                        Text(
+                          AppStrings.checkEmail,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: Colors.deepOrangeAccent,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          "We sent a 6-digit code to your email",
+                        Text(
+                          AppStrings.codeSentMessage,
                           textAlign: TextAlign.center,
                           style:
-                          TextStyle(fontSize: 14, color: Colors.brown),
+                          const TextStyle(fontSize: 14, color: Colors.brown),
                         ),
                         const SizedBox(height: 40),
                         Row(
@@ -902,9 +919,9 @@ class _EmailOTPScreenState extends State<EmailOTPScreen> {
                                 borderRadius: BorderRadius.circular(15),
                               ),
                             ),
-                            child: const Text(
-                              "Verify",
-                              style: TextStyle(
+                            child: Text(
+                              AppStrings.verifyBtn,
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

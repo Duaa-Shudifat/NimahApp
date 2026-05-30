@@ -21,20 +21,17 @@ class BackButtonPositioned extends StatelessWidget {
           color: Colors.deepOrange,
         ),
         onPressed: () {
-          // 1. إذا كان المطلوب هو الرجوع العادي للخلف
           if (useNavigatorPop) {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
             }
           }
-          // 2. إذا تم تحديد صفحة معينة للذهاب إليها
           else if (targetPage != null) {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => targetPage!),
             );
           }
-          // 3. حالة احتياطية إذا لم يتم تحديد شيء
           else {
             if (Navigator.canPop(context)) {
               Navigator.pop(context);
